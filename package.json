@@ -1,8 +1,14 @@
 {
   "name": "json-schema-codec-generator",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Generate typed codec validator code from collections of json-schema",
-  "keywords": ["json-schema", "codegen", "cli", "typescript", "typed"],
+  "keywords": [
+    "json-schema",
+    "codegen",
+    "cli",
+    "typescript",
+    "typed"
+  ],
   "author": "Geoffrey Goodman",
   "license": "MIT",
   "main": "dist/index.cjs.js",
