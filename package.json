@@ -39,7 +39,7 @@
     "@wessberg/rollup-plugin-ts": "^1.3.8",
     "ajv": "^7.0.3",
     "fast-glob": "^3.2.4",
-    "json-schema-to-dts": "file:../json-schema-to-dts",
+    "json-schema-to-dts": "^1.2.0",
     "prettier": "^2.2.1",
     "rollup": "^2.36.1",
     "typescript": "^4.1.3"
@@ -59,12 +59,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ggoodman/typescript-library-template.git"
+    "url": "git+https://github.com/ggoodman/json-schema-codec-generator.git"
   },
   "bugs": {
-    "url": "https://github.com/ggoodman/typescript-library-template/issues"
+    "url": "https://github.com/ggoodman/json-schema-codec-generator/issues"
   },
-  "homepage": "https://github.com/ggoodman/typescript-library-template#readme",
+  "homepage": "https://github.com/ggoodman/json-schema-codec-generator#readme",
   "engines": {
     "node": ">=10.16.0"
   },
