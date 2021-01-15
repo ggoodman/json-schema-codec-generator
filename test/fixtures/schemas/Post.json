@@ -1,0 +1,21 @@
+{
+  "type": "object",
+  "properties": {
+    "author": {
+      "$ref": "file:///User.json"
+    },
+    "title": {
+      "type": "string",
+      "maxLength": 80
+    },
+    "body": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "author",
+    "title",
+    "body"
+  ]
+}
