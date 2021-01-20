@@ -142,87 +142,92 @@ async function readEmbeddedFiles(ctx, embeddedSourceDir) {
   return Promise.all(embeddedFilesPromises);
 }
 
-/** @type {Rollup.OutputOptions[]} */
-const output = [];
+/** @type {Rollup.RollupOptions[]} */
+const configs = [];
+
+/** @type {Rollup.RollupOptions} */
+const baseConfig = {
+  input: './src/index.ts',
+  external: createIsExternal(Package),
+  plugins: [
+    {
+      name: 'stubs',
+      async buildStart() {
+        await generateStubs(this);
+      },
+    },
+    RollupPluginJson(),
+    RollupPluginNodeResolve({
+      mainFields: ['module', 'main'],
+    }),
+    RollupPluginCommonjs({
+      dynamicRequireTargets: [
+        // include using a glob pattern (either a string or an array of strings)
+        'node_modules/ajv/dist/compile**/*.js',
+      ],
+    }),
+    RollupPluginTs({
+      browserslist: ['node 12.16'],
+      exclude: ['node_modules'],
+      transpiler: 'babel',
+    }),
+  ],
+};
 
 if (Package.main) {
-  output.push({
-    exports: 'named',
-    file: Path.resolve(process.cwd(), Package.main),
-    format: 'commonjs',
-    sourcemap: true,
+  configs.push({
+    ...baseConfig,
+    output: {
+      exports: 'named',
+      file: Path.resolve(process.cwd(), Package.main),
+      format: 'commonjs',
+      sourcemap: true,
+    },
   });
 }
 
 if (Package.module) {
-  output.push({
-    exports: 'named',
-    file: Path.resolve(process.cwd(), Package.module),
-    format: 'esm',
-    sourcemap: true,
+  configs.push({
+    ...baseConfig,
+    output: {
+      exports: 'named',
+      file: Path.resolve(process.cwd(), Package.module),
+      format: 'esm',
+      sourcemap: true,
+    },
   });
 }
 
-/** @type {Rollup.RollupOptions[]} */
-const configs = [
-  {
-    input: './src/index.ts',
-    output,
-    external: createIsExternal(Package),
-    plugins: [
-      {
-        name: 'stubs',
-        async buildStart() {
-          await generateStubs(this);
-        },
-      },
-      RollupPluginJson(),
-      RollupPluginNodeResolve({
-        mainFields: ['module', 'main'],
-      }),
-      RollupPluginCommonjs({
-        dynamicRequireTargets: [
-          // include using a glob pattern (either a string or an array of strings)
-          'node_modules/ajv/dist/compile**/*.js',
-        ],
-      }),
-      RollupPluginTs({
-        exclude: ['node_modules'],
-        transpiler: 'babel',
-      }),
-    ],
+configs.push({
+  input: './src/cli.ts',
+  output: {
+    dir: Path.resolve(process.cwd(), './dist'),
+    format: 'cjs',
+    sourcemap: true,
   },
-  {
-    input: './src/cli.ts',
-    output: {
-      dir: Path.resolve(process.cwd(), './dist'),
-      format: 'cjs',
-      sourcemap: true,
+  external: (spec) => /^[^/.]/.test(spec),
+  plugins: [
+    {
+      name: 'stubs',
+      async buildStart() {
+        await generateStubs(this);
+      },
     },
-    external: (spec) => /^[^/.]/.test(spec),
-    plugins: [
-      {
-        name: 'stubs',
-        async buildStart() {
-          await generateStubs(this);
-        },
-      },
-      RollupPluginJson(),
-      RollupPluginNodeResolve({
-        mainFields: ['module', 'main'],
-      }),
-      RollupPluginCommonjs({
-        dynamicRequireTargets: [
-          // include using a glob pattern (either a string or an array of strings)
-          'node_modules/ajv/dist/compile**/*.js',
-        ],
-      }),
-      RollupPluginTs({
-        exclude: ['node_modules'],
-        transpiler: 'babel',
-      }),
-    ],
-  },
-];
+    RollupPluginJson(),
+    RollupPluginNodeResolve({
+      mainFields: ['module', 'main'],
+    }),
+    RollupPluginCommonjs({
+      dynamicRequireTargets: [
+        // include using a glob pattern (either a string or an array of strings)
+        'node_modules/ajv/dist/compile**/*.js',
+      ],
+    }),
+    RollupPluginTs({
+      exclude: ['node_modules'],
+      transpiler: 'babel',
+    }),
+  ],
+});
 
 export default configs;

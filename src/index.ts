@@ -1,20 +1,25 @@
-import { JSONSchema, Parser } from 'json-schema-to-dts';
-import Ajv from 'ajv';
-import standaloneCode from 'ajv/dist/standalone';
-import { OutputChunk, rollup } from 'rollup';
 import RollupPluginCommonJs from '@rollup/plugin-commonjs';
 import RollupPluginTs from '@wessberg/rollup-plugin-ts';
-import { promises as Fs } from 'fs';
+import Ajv, { Options } from 'ajv';
+import standaloneCode from 'ajv/dist/standalone';
+import { JSONSchema, Parser } from 'json-schema-to-dts';
 import * as Path from 'path';
-import { staticFiles } from './embedded';
-import { VIRTUAL_ROOT } from './constants';
 import { format } from 'prettier';
+import { OutputAsset, OutputChunk, rollup } from 'rollup';
+import { VIRTUAL_ROOT } from './constants';
+import { staticFiles } from './embedded';
+
+export { CodecImpl } from './stub/codec';
+export type { Codec } from './stub/codec';
+export { ValidationError } from './stub/validator';
 
 const indexPrelude =
   `
+import { CodecImpl } from './codec';
 import { Codec } from './codec';
-import type * as Types from './types';
+import * as Types from './types';
 import * as Validators from './validators';
+export { Codec, Types };
 `.trim() + '\n';
 const validationPrelude =
   `
@@ -24,9 +29,14 @@ import { ValidateFunction } from './validator';
 
 export type Schemas = { [uri: string]: Exclude<JSONSchema, boolean> };
 
-export async function generateCodecCode(schemas: Schemas) {
+export interface GenerateCodecCodeOptions
+  extends Omit<Options, 'allErrors' | 'code' | 'inlineRefs'> {}
+
+export async function generateCodecCode(schemas: Schemas, options: GenerateCodecCodeOptions = {}) {
   const parser = new Parser();
   const ajv = new Ajv({
+    verbose: true,
+    ...options,
     allErrors: true,
     code: {
       es5: false, // use es6
@@ -35,7 +45,6 @@ export async function generateCodecCode(schemas: Schemas) {
       source: true,
     },
     inlineRefs: false,
-    verbose: true,
   });
 
   const exportedNameToSchema: Record<string, JSONSchema> = {};
@@ -66,9 +75,9 @@ export async function generateCodecCode(schemas: Schemas) {
 
     validationFunctionDefinitions.push(`export const ${name}: ValidateFunction<Types.${name}>;`);
     codecDefinitions.push(
-      `export const ${name} = new Codec<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
-        uri
-      )}, Validators.${name});`
+      `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(
+        name
+      )}, ${JSON.stringify(uri)}, Validators.${name}) as Codec<Types.${name}>`
     );
   }
 
@@ -129,29 +138,30 @@ export async function generateCodecCode(schemas: Schemas) {
       return match;
     });
 
+  const compilerOptions = {
+    allowJs: true,
+    allowSyntheticDefaultImports: true,
+    alwaysStrict: true,
+    baseUrl: 'src',
+    checkJs: false,
+    declaration: true,
+    declarationMap: false,
+    downlevelIteration: false,
+    esModuleInterop: true,
+    // isolatedModules: true,
+    importHelpers: true,
+    lib: ['es5'],
+    skipDefaultLibCheck: true,
+    skipLibCheck: true,
+    module: 'commonjs',
+    moduleResolution: 'node',
+    outDir: 'dist',
+    rootDir: 'src',
+    target: 'es2017',
+  };
   const tsConfig = {
     include: ['src'],
-    compilerOptions: {
-      allowJs: true,
-      allowSyntheticDefaultImports: true,
-      alwaysStrict: true,
-      baseUrl: 'src',
-      checkJs: false,
-      declaration: true,
-      declarationMap: false,
-      downlevelIteration: false,
-      esModuleInterop: true,
-      isolatedModules: true,
-      importHelpers: true,
-      lib: ['es5'],
-      skipDefaultLibCheck: true,
-      skipLibCheck: true,
-      module: 'esnext',
-      moduleResolution: 'node',
-      outDir: 'dist',
-      rootDir: 'src',
-      target: 'es6',
-    },
+    compilerOptions,
   };
 
   const vfs = { ...staticFiles };
@@ -159,7 +169,10 @@ export async function generateCodecCode(schemas: Schemas) {
   vfs[Path.join(VIRTUAL_ROOT, 'src/index.ts')] =
     `
     ${indexPrelude}
-    ${codecDefinitions.join('\n')}
+
+    export const Codecs = {
+    ${codecDefinitions.join(',\n')}
+    } as const;
   `.trim() + '\n';
 
   vfs[Path.join(VIRTUAL_ROOT, 'src/types.ts')] =
@@ -188,6 +201,7 @@ export async function generateCodecCode(schemas: Schemas) {
         cwd: VIRTUAL_ROOT,
         transpiler: 'babel',
         browserslist: 'node 10',
+        tsconfig: compilerOptions,
         // transpileOnly: true,
         fileSystem: createVirtualFilesystem(vfs),
       }),
@@ -221,16 +235,16 @@ export async function generateCodecCode(schemas: Schemas) {
     throw new Error(`Invariant violation: The build failed to produce a JavaScript bundle.`);
   }
 
-  const typeDefinitionChunk = output.output.find((chunk) => chunk.fileName === 'index.d.ts') as
-    | OutputChunk
-    | undefined;
+  const typeDefinitionChunk = output.output.find(
+    (chunk) => chunk.type === 'asset' && chunk.fileName === 'index.d.ts'
+  ) as OutputAsset | undefined;
   if (!typeDefinitionChunk) {
     throw new Error(`Invariant violation: The build failed to produce a JavaScript bundle.`);
   }
 
   return {
     javaScript: javaScriptChunk.code,
-    typeDefinitions: typeDefinitionChunk.code,
+    typeDefinitions: typeDefinitionChunk.source,
     schamaPathsToCodecNames: uriToExportedName,
   };
 }

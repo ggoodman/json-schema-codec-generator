@@ -32,8 +32,8 @@ json-schema-codec-generator --input ./path/to/my/schema/dir --output ./codecs/
 
 The `Codec` objects exported by the generated code have the following methods and properties:
 
-- `.assert(obj)` -- Asserts that `obj` value conforms to the JSON-Schema at **runtime**, throwing a `ValidationError` if not. This also acts as a TypeScript [assertion function](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-3-7.html#assertion-functions) so that `obj` will be correctly typed anywhere later in the control flow.
-
 - `.identity(obj)` -- A no-op function at runtime that is provided for developer ergonomics in a JavaScript environment where you want to construct a conforming object while benefitting from all the glory of modern type hinting provided by TypeScript language services.
 
 - `.is(obj)` -- Check that `obj` value conforms to the JSON-Schema at **runtime** returning `true` or `false`. This also acts as a [user-defined type guard](https://www.typescriptlang.org/docs/handbook/advanced-types.html#user-defined-type-guards) so that if this function is used as a condition, anything within the consequent block will be correctly typed.
+
+- `.validate(obj)` -- Ensures that `obj` value conforms to the JSON-Schema at **runtime**, throwing a `ValidationError` if not. Returns the validated object when valid.

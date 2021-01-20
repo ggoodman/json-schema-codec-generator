@@ -15,6 +15,8 @@
     "resolveJsonModule": true,
     "sourceMap": true,
     "strict": true,
+    "importsNotUsedAsValues": "error",
+    "isolatedModules": true,
     "target": "ES2018",
     "types": ["node"]
   },

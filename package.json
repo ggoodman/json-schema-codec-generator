@@ -11,7 +11,7 @@
   ],
   "author": "Geoffrey Goodman",
   "license": "MIT",
-  "main": "dist/index.cjs.js",
+  "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "bin": {
