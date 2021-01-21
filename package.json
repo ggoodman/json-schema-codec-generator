@@ -1,6 +1,6 @@
 {
   "name": "json-schema-codec-generator",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Generate typed codec validator code from collections of json-schema",
   "keywords": [
     "json-schema",
