@@ -199,9 +199,9 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
       moduleSideEffects: (id) => {
         // console.debug('moduleHasSideEffects(%s, %s)', id, isExternal);
 
-        // Make sure unreferenced ajv modules can be tree-shaken by forcing
+        // Make sure unreferenced modules can be tree-shaken by forcing
         // them to be considered side-effect-free.
-        return !id.startsWith('ajv/dist');
+        return false;
       },
     },
     plugins: [
@@ -260,19 +260,20 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
 }
 
 function virtualFileSystemPlugin(vfs: { [key: string]: string }): import('rollup').Plugin {
-  const candidateExt = ['', '.js', '.ts'];
-
+  
   return {
     name: 'vfs',
     resolveId: async (source, importer) => {
+      const candidateExt = ['', '.js', '.ts'];
       const [sourceBase, suffix = ''] = source.split('?', 2);
 
-      const resolved =
-        !sourceBase.startsWith('/') && !sourceBase.startsWith('.')
-          ? `/virtual/src/node_modules/${sourceBase}`
-          : importer
-          ? Path.resolve(Path.dirname(importer), sourceBase)
-          : sourceBase;
+      let resolved = importer ? Path.resolve(Path.dirname(importer), sourceBase) : sourceBase;
+
+      if (!sourceBase.startsWith('/') && !sourceBase.startsWith('.')) {
+        resolved = `/virtual/src/node_modules/${sourceBase}`;
+        // Solve for the case where node will consider a directory with an index also
+        candidateExt.push(...candidateExt.map((ext) => `/index${ext}`));
+      }
 
       for (const ext of candidateExt) {
         const candidate = `${resolved}${ext}`;

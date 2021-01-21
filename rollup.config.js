@@ -128,12 +128,17 @@ async function readEmbeddedFiles(ctx, embeddedSourceDir) {
     cwd: Path.dirname(require.resolve('ajv/package.json')),
     absolute: true,
   })
-  const ajvFiles = [
+  const fastDeepEqualFiles = await FastGlob('./**/*.(js|d.ts)', {
+    cwd: Path.dirname(require.resolve('fast-deep-equal/package.json')),
+    absolute: true,
+  })
+  const nodeModuleFiles = [
     require.resolve('ajv/package.json'),
     ...ajvCompileFiles,
+    ...fastDeepEqualFiles,
   ];
 
-  for (const fileName of ajvFiles) {
+  for (const fileName of nodeModuleFiles) {
     embeddedFilesPromises.push(
       Fs.readFile(fileName, 'utf8').then((content) => {
         return {
