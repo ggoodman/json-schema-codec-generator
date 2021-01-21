@@ -7,6 +7,7 @@ import RollupPluginJson from '@rollup/plugin-json';
 import RollupPluginNodeResolve from '@rollup/plugin-node-resolve';
 import RollupPluginTs from '@wessberg/rollup-plugin-ts';
 import * as Crypto from 'crypto';
+import FastGlob from 'fast-glob';
 import { promises as Fs } from 'fs';
 import { builtinModules } from 'module';
 import * as Path from 'path';
@@ -123,9 +124,13 @@ async function readEmbeddedFiles(ctx, embeddedSourceDir) {
     );
   }
 
+  const ajvCompileFiles = await FastGlob('./dist/compile/**/*.(js|d.ts)', {
+    cwd: Path.dirname(require.resolve('ajv/package.json')),
+    absolute: true,
+  })
   const ajvFiles = [
     require.resolve('ajv/package.json'),
-    require.resolve('ajv/dist/compile/ucs2length'),
+    ...ajvCompileFiles,
   ];
 
   for (const fileName of ajvFiles) {

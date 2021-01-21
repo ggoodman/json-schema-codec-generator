@@ -75,9 +75,9 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
 
     validationFunctionDefinitions.push(`export const ${name}: ValidateFunction<Types.${name}>;`);
     codecDefinitions.push(
-      `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(
-        name
-      )}, ${JSON.stringify(uri)}, Validators.${name}) as Codec<Types.${name}>`
+      `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
+        uri
+      )}, Validators.${name}) as Codec<Types.${name}>`
     );
   }
 
@@ -195,6 +195,15 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
 
   const build = await rollup({
     input: Path.resolve(VIRTUAL_ROOT, 'src/index.ts'),
+    treeshake: {
+      moduleSideEffects: (id) => {
+        // console.debug('moduleHasSideEffects(%s, %s)', id, isExternal);
+
+        // Make sure unreferenced ajv modules can be tree-shaken by forcing
+        // them to be considered side-effect-free.
+        return !id.startsWith('ajv/dist');
+      },
+    },
     plugins: [
       virtualFileSystemPlugin(vfs),
       RollupPluginTs({
@@ -205,8 +214,9 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
         // transpileOnly: true,
         fileSystem: createVirtualFilesystem(vfs),
       }),
-      RollupPluginCommonJs(),
-      // RollupPluginNodeResolve(),
+      RollupPluginCommonJs({
+        transformMixedEsModules: true,
+      }),
       {
         name: 'prettier',
         renderChunk: async (code, chunk) => {
@@ -255,23 +265,26 @@ function virtualFileSystemPlugin(vfs: { [key: string]: string }): import('rollup
   return {
     name: 'vfs',
     resolveId: async (source, importer) => {
-      if (!source.startsWith('/') && !source.startsWith('.')) {
-        // console.debug('vfs.resolveId(%s, %s): %s', source, importer, undefined);
-        return;
-      }
+      const [sourceBase, suffix = ''] = source.split('?', 2);
 
-      const resolved = importer ? Path.resolve(importer, source) : source;
+      const resolved =
+        !sourceBase.startsWith('/') && !sourceBase.startsWith('.')
+          ? `/virtual/src/node_modules/${sourceBase}`
+          : importer
+          ? Path.resolve(Path.dirname(importer), sourceBase)
+          : sourceBase;
 
       for (const ext of candidateExt) {
         const candidate = `${resolved}${ext}`;
 
         if (candidate in vfs) {
-          // console.debug('vfs.resolveId(%s, %s): %s', source, importer, candidate);
-          return candidate;
+          // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, candidate, '✅');
+          return `${candidate}${suffix}`;
         }
+        // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, candidate, '❌');
       }
 
-      // console.debug('vfs.resolveId(%s, %s): %s', source, importer, undefined);
+      // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, undefined);
     },
     load: async (source) => {
       // console.debug('vfs.load(%s)', source);
