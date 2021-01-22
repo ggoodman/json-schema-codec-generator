@@ -32,12 +32,11 @@ export interface SchemaEntry {
   schema: Exclude<JSONSchema, boolean>;
   preferredName?: string;
 }
-export type Schemas = [SchemaEntry];
 
 export interface GenerateCodecCodeOptions
   extends Omit<Options, 'allErrors' | 'code' | 'inlineRefs'> {}
 
-export async function generateCodecCode(schemas: Schemas, options: GenerateCodecCodeOptions = {}) {
+export async function generateCodecCode(schemas: SchemaEntry[], options: GenerateCodecCodeOptions = {}) {
   const parser = new Parser();
   const ajv = new Ajv({
     verbose: true,

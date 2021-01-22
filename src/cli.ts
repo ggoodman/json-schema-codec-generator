@@ -1,7 +1,7 @@
 import Yargs from 'yargs';
 import * as Path from 'path';
 import { promises as Fs } from 'fs';
-import type { Schemas } from './index';
+import type { SchemaEntry } from './index';
 import fastGlob from 'fast-glob';
 
 Yargs.help()
@@ -41,15 +41,20 @@ Yargs.help()
         process.exit(1);
       }
 
-      const schemas: Schemas = {};
+      const schemas: SchemaEntry[] = [];
 
       for (const schemaPathRel of matches) {
         const schemaPath = Path.join(inputPath, schemaPathRel);
         const schemaUrl = `file:///${schemaPathRel}`;
         const schemaData = await Fs.readFile(schemaPath, 'utf8');
+        const preferredName = Path.basename(schemaPath, Path.extname(schemaPath));
         const schema = JSON.parse(schemaData);
 
-        schemas[schemaUrl] = schema;
+        schemas.push({
+          schema,
+          uri: schemaUrl,
+          preferredName,
+        });
       }
 
       const { generateCodecCode } = await import('./index');
