@@ -27,7 +27,12 @@ import * as Types from './types';
 import { ValidateFunction } from './validator';  
 `.trim() + '\n';
 
-export type Schemas = { [uri: string]: Exclude<JSONSchema, boolean> };
+export interface SchemaEntry {
+  uri: string;
+  schema: Exclude<JSONSchema, boolean>;
+  preferredName?: string;
+}
+export type Schemas = [SchemaEntry];
 
 export interface GenerateCodecCodeOptions
   extends Omit<Options, 'allErrors' | 'code' | 'inlineRefs'> {}
@@ -57,9 +62,9 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
   const validationFunctionDefinitions: string[] = [];
   const codecDefinitions: string[] = [];
 
-  for (const uri in schemas) {
-    const schema: JSONSchema = { $id: uri, ...schemas[uri] };
-    const name = parser.addSchema(uri, schema);
+  for (const { schema, uri, preferredName } of schemas) {
+    const schemaWithId: JSONSchema = { $id: uri, ...schema };
+    const name = parser.addSchema(uri, schemaWithId, { preferredName });
 
     if (exportedNames.has(name)) {
       throw new Error(
@@ -69,9 +74,9 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
 
     exportedNames.add(name);
     uriToExportedName[uri] = name;
-    exportedNameToSchema[name] = schema;
+    exportedNameToSchema[name] = schemaWithId;
 
-    ajv.addSchema(schema, name);
+    ajv.addSchema(schemaWithId, name);
 
     validationFunctionDefinitions.push(`export const ${name}: ValidateFunction<Types.${name}>;`);
     codecDefinitions.push(
@@ -260,7 +265,6 @@ export async function generateCodecCode(schemas: Schemas, options: GenerateCodec
 }
 
 function virtualFileSystemPlugin(vfs: { [key: string]: string }): import('rollup').Plugin {
-  
   return {
     name: 'vfs',
     resolveId: async (source, importer) => {
