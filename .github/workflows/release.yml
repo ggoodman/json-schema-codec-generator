@@ -16,7 +16,6 @@ jobs:
       - name: "Build distribution"
         run: npm run build
       - name: "Publish to NPM"
-        working-directory: './dist'
         run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
