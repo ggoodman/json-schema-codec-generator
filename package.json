@@ -50,6 +50,7 @@
     "@types/node": "^10.17.51",
     "gh-release": "^5.0.0",
     "jest": "^26.5.0",
+    "kacl": "^1.1.1",
     "ts-jest": "^26.4.4"
   },
   "scripts": {
