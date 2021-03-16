@@ -1,6 +1,6 @@
 {
   "name": "json-schema-codec-generator",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Generate typed codec validator code from collections of json-schema",
   "keywords": [
     "json-schema",
@@ -15,7 +15,7 @@
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "json-schema-codec-generator": "./bin/json-schema-codec-generator"
+    "json-schema-codec-generator": "bin/json-schema-codec-generator"
   },
   "browser": {},
   "exports": {
