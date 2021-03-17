@@ -1,13 +1,4 @@
-export interface ErrorObject {
-  keyword: string;
-  dataPath: string;
-  schemaPath: string;
-  params: { [key: string]: unknown };
-  propertyName?: string;
-  message: string;
-  schema: unknown;
-  data: unknown;
-}
+import type { ErrorObject } from './types';
 
 export class ValidationError extends Error {
   static isValidationError(err: unknown): err is ValidationError {
@@ -31,11 +22,6 @@ export class ValidationError extends Error {
     this.value = value;
     this.validatorErrors = validatorErrors;
   }
-}
-
-export interface ValidateFunction<T = unknown> {
-  (data: unknown): data is T;
-  errors?: ErrorObject[];
 }
 
 function valueToShapeString(value: unknown) {
