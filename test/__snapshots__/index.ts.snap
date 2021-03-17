@@ -540,3 +540,551 @@ declare const Codecs: {
 export { Codec, Types, Codecs };
 "
 `;
+
+exports[`Codec generation will validate a well-known format from ajv-formats 1`] = `
+"\\"use strict\\";
+
+Object.defineProperty(exports, \\"__esModule\\", { value: true });
+
+class ValidationError extends Error {
+  constructor(schemaName, value, validatorErrors) {
+    const errorStrings = validatorErrors.map((err) => {
+      return \`  \${err.message} at \${
+        err.dataPath || \\"#\\"
+      }, got \${valueToShapeString(err.data)}\`;
+    });
+    super(
+      \`Validation for the schema \${JSON.stringify(
+        schemaName
+      )} failed with the following errors:\\\\n\${errorStrings.join(\\"\\\\n\\")}\`
+    );
+    this.value = value;
+    this.validatorErrors = validatorErrors;
+  }
+
+  static isValidationError(err) {
+    return err instanceof this;
+  }
+}
+
+function valueToShapeString(value) {
+  return JSON.stringify(value, valueToShapeReplacer);
+}
+
+function valueToShapeReplacer(_key, value) {
+  return typeof value === \\"object\\" && value ? value : typeof value;
+}
+
+class CodecImpl {
+  constructor(name, uri, validateFn) {
+    this.name = name;
+    this.uri = uri;
+    this.validateFn = validateFn;
+  }
+  /**
+   * Identify function returning the given argument as a value matching the schema.
+   *
+   * This can be useful to use in non-TypeScript code to construct a valid object while
+   * benefitting from suggestions from a TypeScript language service.
+   */
+
+  identity(obj) {
+    return obj;
+  }
+  /**
+   * Check if a value matches the schema.
+   */
+
+  is(obj) {
+    return this.validateFn(obj);
+  }
+  /**
+   * Validate that a value matches the schema and throws if not.
+   */
+
+  validate(obj) {
+    if (!this.validateFn(obj)) {
+      throw new ValidationError(this.name, obj, this.validateFn.errors || []);
+    }
+
+    return obj;
+  }
+}
+
+var types = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
+});
+
+var __assign = Object.assign;
+
+function fmtDef(validate, compare) {
+  return {
+    validate,
+    compare,
+  };
+}
+
+const fullFormats = {
+  date: fmtDef(date, compareDate),
+  time: fmtDef(time, compareTime),
+  \\"date-time\\": fmtDef(date_time, compareDateTime),
+  duration: /^P(?!$)((\\\\d+Y)?(\\\\d+M)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?|(\\\\d+W)?)$/,
+  uri,
+  \\"uri-reference\\": /^(?:[a-z][a-z0-9+\\\\-.]*:)?(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\\\\?(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i,
+  \\"uri-template\\": /^(?:(?:[^\\\\x00-\\\\x20\\"'<>%\\\\\\\\^\`{|}]|%[0-9a-f]{2})|\\\\{[+#./;?&=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?)*\\\\})*$/i,
+  url: /^(?:https?|ftp):\\\\/\\\\/(?:\\\\S+(?::\\\\S*)?@)?(?:(?!(?:10|127)(?:\\\\.\\\\d{1,3}){3})(?!(?:169\\\\.254|192\\\\.168)(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)(?:\\\\.(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)*(?:\\\\.(?:[a-z\\\\u{00a1}-\\\\u{ffff}]{2,})))(?::\\\\d{2,5})?(?:\\\\/[^\\\\s]*)?$/iu,
+  email: /^[a-z0-9!#$%&'*+/=?^_\`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i,
+  hostname: /^(?=.{1,253}\\\\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\\\\.?$/i,
+  ipv4: /^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$/,
+  ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:)))$/i,
+  regex,
+  uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
+  \\"json-pointer\\": /^(?:\\\\/(?:[^~/]|~0|~1)*)*$/,
+  \\"json-pointer-uri-fragment\\": /^#(?:\\\\/(?:[a-z0-9_\\\\-.!$&'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i,
+  \\"relative-json-pointer\\": /^(?:0|[1-9][0-9]*)(?:#|(?:\\\\/(?:[^~/]|~0|~1)*)*)$/,
+};
+
+const fastFormats = __assign(__assign({}, fullFormats), {
+  date: fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d$/, compareDate),
+  time: fmtDef(
+    /^(?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i,
+    compareTime
+  ),
+  \\"date-time\\": fmtDef(
+    /^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d[t\\\\s](?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)$/i,
+    compareDateTime
+  ),
+  uri: /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/)?[^\\\\s]*$/i,
+  \\"uri-reference\\": /^(?:(?:[a-z][a-z0-9+\\\\-.]*:)?\\\\/?\\\\/)?(?:[^\\\\\\\\\\\\s#][^\\\\s#]*)?(?:#[^\\\\\\\\\\\\s]*)?$/i,
+  email: /^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i,
+});
+
+const formatNames = Object.keys(fullFormats);
+
+function isLeapYear(year) {
+  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+}
+
+const DATE = /^(\\\\d\\\\d\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d)$/;
+const DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function date(str) {
+  const matches = DATE.exec(str);
+  if (!matches) return false;
+  const year = +matches[1];
+  const month = +matches[2];
+  const day = +matches[3];
+  return (
+    month >= 1 &&
+    month <= 12 &&
+    day >= 1 &&
+    day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month])
+  );
+}
+
+function compareDate(d1, d2) {
+  if (!(d1 && d2)) return void 0;
+  if (d1 > d2) return 1;
+  if (d1 < d2) return -1;
+  return 0;
+}
+
+const TIME = /^(\\\\d\\\\d):(\\\\d\\\\d):(\\\\d\\\\d)(\\\\.\\\\d+)?(z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i;
+
+function time(str, withTimeZone) {
+  const matches = TIME.exec(str);
+  if (!matches) return false;
+  const hour = +matches[1];
+  const minute = +matches[2];
+  const second = +matches[3];
+  const timeZone = matches[5];
+  return (
+    ((hour <= 23 && minute <= 59 && second <= 59) ||
+      (hour === 23 && minute === 59 && second === 60)) &&
+    (!withTimeZone || timeZone !== \\"\\")
+  );
+}
+
+function compareTime(t1, t2) {
+  if (!(t1 && t2)) return void 0;
+  const a1 = TIME.exec(t1);
+  const a2 = TIME.exec(t2);
+  if (!(a1 && a2)) return void 0;
+  t1 = a1[1] + a1[2] + a1[3] + (a1[4] || \\"\\");
+  t2 = a2[1] + a2[2] + a2[3] + (a2[4] || \\"\\");
+  if (t1 > t2) return 1;
+  if (t1 < t2) return -1;
+  return 0;
+}
+
+const DATE_TIME_SEPARATOR = /t|\\\\s/i;
+
+function date_time(str) {
+  const dateTime = str.split(DATE_TIME_SEPARATOR);
+  return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1], true);
+}
+
+function compareDateTime(dt1, dt2) {
+  if (!(dt1 && dt2)) return void 0;
+  const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
+  const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
+  const res = compareDate(d1, d2);
+  if (res === void 0) return void 0;
+  return res || compareTime(t1, t2);
+}
+
+const NOT_URI_FRAGMENT = /\\\\/|:/;
+const URI = /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\\\\?(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
+
+function uri(str) {
+  return NOT_URI_FRAGMENT.test(str) && URI.test(str);
+}
+
+const Z_ANCHOR = /[^\\\\\\\\]\\\\\\\\Z/;
+
+function regex(str) {
+  if (Z_ANCHOR.test(str)) return false;
+
+  try {
+    new RegExp(str);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+var formats = /*#__PURE__*/ Object.freeze({
+  __proto__: null,
+  fastFormats: fastFormats,
+  formatNames: formatNames,
+  fullFormats: fullFormats,
+});
+
+function getAugmentedNamespace(n) {
+  if (n.__esModule) return n;
+  var a = Object.defineProperty({}, \\"__esModule\\", { value: true });
+  Object.keys(n).forEach(function (k) {
+    var d = Object.getOwnPropertyDescriptor(n, k);
+    Object.defineProperty(
+      a,
+      k,
+      d.get
+        ? d
+        : {
+            enumerable: true,
+            get: function () {
+              return n[k];
+            },
+          }
+    );
+  });
+  return a;
+}
+
+var require$$0 = /*@__PURE__*/ getAugmentedNamespace(formats);
+
+const Bookmark = validate21;
+const schema6 = {
+  $id: \\"file:///Bookmark.json\\",
+  title: \\"A Bookmark\\",
+  type: \\"object\\",
+  properties: {
+    url: {
+      type: \\"string\\",
+      format: \\"uri\\",
+    },
+    name: {
+      type: \\"string\\",
+    },
+    added_at: {
+      type: \\"string\\",
+      format: \\"date-time\\",
+    },
+  },
+  required: [\\"url\\", \\"name\\", \\"added_at\\"],
+};
+
+const formats0 = require$$0.fullFormats.uri;
+
+const formats2 = require$$0.fullFormats[\\"date-time\\"];
+
+function validate21(
+  data,
+  { dataPath = \\"\\", parentData, parentDataProperty, rootData = data } = {}
+) {
+  let vErrors = null;
+  let errors = 0;
+
+  if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
+    if (data.url === undefined) {
+      const err0 = {
+        keyword: \\"required\\",
+        dataPath,
+        schemaPath: \\"#/required\\",
+        params: {
+          missingProperty: \\"url\\",
+        },
+        message: \\"should have required property '\\" + \\"url\\" + \\"'\\",
+        schema: schema6.required,
+        parentSchema: schema6,
+        data,
+      };
+
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+
+      errors++;
+    }
+
+    if (data.name === undefined) {
+      const err1 = {
+        keyword: \\"required\\",
+        dataPath,
+        schemaPath: \\"#/required\\",
+        params: {
+          missingProperty: \\"name\\",
+        },
+        message: \\"should have required property '\\" + \\"name\\" + \\"'\\",
+        schema: schema6.required,
+        parentSchema: schema6,
+        data,
+      };
+
+      if (vErrors === null) {
+        vErrors = [err1];
+      } else {
+        vErrors.push(err1);
+      }
+
+      errors++;
+    }
+
+    if (data.added_at === undefined) {
+      const err2 = {
+        keyword: \\"required\\",
+        dataPath,
+        schemaPath: \\"#/required\\",
+        params: {
+          missingProperty: \\"added_at\\",
+        },
+        message: \\"should have required property '\\" + \\"added_at\\" + \\"'\\",
+        schema: schema6.required,
+        parentSchema: schema6,
+        data,
+      };
+
+      if (vErrors === null) {
+        vErrors = [err2];
+      } else {
+        vErrors.push(err2);
+      }
+
+      errors++;
+    }
+
+    if (data.url !== undefined) {
+      let data0 = data.url;
+
+      if (typeof data0 === \\"string\\") {
+        if (!formats0(data0)) {
+          const err3 = {
+            keyword: \\"format\\",
+            dataPath: dataPath + \\"/url\\",
+            schemaPath: \\"#/properties/url/format\\",
+            params: {
+              format: \\"uri\\",
+            },
+            message: 'should match format \\"' + \\"uri\\" + '\\"',
+            schema: \\"uri\\",
+            parentSchema: schema6.properties.url,
+            data: data0,
+          };
+
+          if (vErrors === null) {
+            vErrors = [err3];
+          } else {
+            vErrors.push(err3);
+          }
+
+          errors++;
+        }
+      } else {
+        const err4 = {
+          keyword: \\"type\\",
+          dataPath: dataPath + \\"/url\\",
+          schemaPath: \\"#/properties/url/type\\",
+          params: {
+            type: \\"string\\",
+          },
+          message: \\"should be string\\",
+          schema: schema6.properties.url.type,
+          parentSchema: schema6.properties.url,
+          data: data0,
+        };
+
+        if (vErrors === null) {
+          vErrors = [err4];
+        } else {
+          vErrors.push(err4);
+        }
+
+        errors++;
+      }
+    }
+
+    if (data.name !== undefined) {
+      let data1 = data.name;
+
+      if (typeof data1 !== \\"string\\") {
+        const err5 = {
+          keyword: \\"type\\",
+          dataPath: dataPath + \\"/name\\",
+          schemaPath: \\"#/properties/name/type\\",
+          params: {
+            type: \\"string\\",
+          },
+          message: \\"should be string\\",
+          schema: schema6.properties.name.type,
+          parentSchema: schema6.properties.name,
+          data: data1,
+        };
+
+        if (vErrors === null) {
+          vErrors = [err5];
+        } else {
+          vErrors.push(err5);
+        }
+
+        errors++;
+      }
+    }
+
+    if (data.added_at !== undefined) {
+      let data2 = data.added_at;
+
+      if (typeof data2 === \\"string\\") {
+        if (!formats2.validate(data2)) {
+          const err6 = {
+            keyword: \\"format\\",
+            dataPath: dataPath + \\"/added_at\\",
+            schemaPath: \\"#/properties/added_at/format\\",
+            params: {
+              format: \\"date-time\\",
+            },
+            message: 'should match format \\"' + \\"date-time\\" + '\\"',
+            schema: \\"date-time\\",
+            parentSchema: schema6.properties.added_at,
+            data: data2,
+          };
+
+          if (vErrors === null) {
+            vErrors = [err6];
+          } else {
+            vErrors.push(err6);
+          }
+
+          errors++;
+        }
+      } else {
+        const err7 = {
+          keyword: \\"type\\",
+          dataPath: dataPath + \\"/added_at\\",
+          schemaPath: \\"#/properties/added_at/type\\",
+          params: {
+            type: \\"string\\",
+          },
+          message: \\"should be string\\",
+          schema: schema6.properties.added_at.type,
+          parentSchema: schema6.properties.added_at,
+          data: data2,
+        };
+
+        if (vErrors === null) {
+          vErrors = [err7];
+        } else {
+          vErrors.push(err7);
+        }
+
+        errors++;
+      }
+    }
+  } else {
+    const err8 = {
+      keyword: \\"type\\",
+      dataPath,
+      schemaPath: \\"#/type\\",
+      params: {
+        type: \\"object\\",
+      },
+      message: \\"should be object\\",
+      schema: schema6.type,
+      parentSchema: schema6,
+      data,
+    };
+
+    if (vErrors === null) {
+      vErrors = [err8];
+    } else {
+      vErrors.push(err8);
+    }
+
+    errors++;
+  }
+
+  validate21.errors = vErrors;
+  return errors === 0;
+}
+
+const Codecs = {
+  Bookmark: new CodecImpl(\\"Bookmark\\", \\"file:///Bookmark.json\\", Bookmark),
+};
+
+exports.Codecs = Codecs;
+exports.Types = types;
+"
+`;
+
+exports[`Codec generation will validate a well-known format from ajv-formats 2`] = `
+Object {
+  "file:///Bookmark.json": "Bookmark",
+}
+`;
+
+exports[`Codec generation will validate a well-known format from ajv-formats 3`] = `
+"interface Codec<T> {
+    /**
+     * Identify function returning the given argument as a value matching the schema.
+     *
+     * This can be useful to use in non-TypeScript code to construct a valid object while
+     * benefitting from suggestions from a TypeScript language service.
+     */
+    identity(obj: T): T;
+    /**
+     * Check if a value matches the schema.
+     */
+    is(obj: unknown): obj is T;
+    /**
+     * Validate that a value matches the schema and throws if not.
+     */
+    validate(obj: unknown): T;
+}
+declare namespace Types {
+    /**
+     * A Bookmark
+     * @see file:///Bookmark.json
+     */
+    type Bookmark = {
+        url: string;
+        name: string;
+        added_at: string;
+    };
+}
+declare const Codecs: {
+    readonly Bookmark: Codec<Types.Bookmark>;
+};
+export { Codec, Types, Codecs };
+"
+`;
