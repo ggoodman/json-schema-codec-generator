@@ -45,6 +45,7 @@
   "devDependencies": {
     "@types/jest": "^26.0.20",
     "@types/node": "^10.17.51",
+    "@types/resolve": "^1.20.0",
     "gh-release": "^5.0.0",
     "jest": "^26.5.0",
     "kacl": "^1.1.1",
