@@ -7,13 +7,11 @@ import RollupPluginJson from '@rollup/plugin-json';
 import RollupPluginNodeResolve from '@rollup/plugin-node-resolve';
 import RollupPluginTs from '@wessberg/rollup-plugin-ts';
 import * as Crypto from 'crypto';
-import FastGlob from 'fast-glob';
 import { promises as Fs } from 'fs';
 import { builtinModules } from 'module';
 import * as Path from 'path';
 import * as Rollup from 'rollup';
 import * as Package from './package.json';
-import { build } from 'esbuild';
 
 const SPEC_RX = /^(@[^/]+\/[^/@]+|[^./@][^/@]*)(.*)?$/;
 
@@ -50,7 +48,7 @@ function createIsExternal(packageJson) {
  */
 async function generateStubs(ctx) {
   const embeddedSourceDir = Path.resolve(__dirname, './src/stub');
-  const embeddedFilesPath = Path.resolve(__dirname, './src/embedded.ts');
+  const embeddedFilesPath = Path.resolve(__dirname, './src/generated/embedded.ts');
   const embeddedFilesHash = Crypto.createHash('md5')
     .update(await Fs.readFile(embeddedFilesPath))
     .digest('hex');
@@ -60,10 +58,10 @@ async function generateStubs(ctx) {
 // ------------------------------------
     `.trim();
   const embeddedFiles = await readEmbeddedFiles(ctx, embeddedSourceDir);
-  const embeddedFilesCode = `${embeddedBanner}\n\nimport { VIRTUAL_ROOT } from './constants';\n\nexport const staticFiles = {\n${embeddedFiles
+  const embeddedFilesCode = `${embeddedBanner}\n\nexport const staticFiles: Record<string, string | undefined> = {\n${embeddedFiles
     .map(
       ({ fileName, content }) =>
-        `  [\`\${VIRTUAL_ROOT}/src/${fileName}\`]: ${JSON.stringify(content)},`
+        `  ${JSON.stringify(`src/${fileName}`)}: ${JSON.stringify(content)},`
     )
     .join('\n')}\n}\n`;
   const newHash = Crypto.createHash('md5').update(embeddedFilesCode).digest('hex');
@@ -105,75 +103,6 @@ async function readEmbeddedFiles(ctx, embeddedSourceDir) {
         content,
       };
     });
-
-  const libDTsFiles = [
-    require.resolve('typescript/lib/lib.es5.d.ts'),
-    require.resolve('tslib/package.json'),
-    require.resolve('tslib/tslib.d.ts'),
-    require.resolve('tslib/tslib.es6.js'),
-    require.resolve('tslib/tslib.js'),
-  ];
-
-  for (const fileName of libDTsFiles) {
-    embeddedFilesPromises.push(
-      Fs.readFile(fileName, 'utf8').then((content) => {
-        return {
-          fileName: Path.relative(process.cwd(), fileName),
-          content,
-        };
-      })
-    );
-  }
-
-  const outDir = `/fake/path`;
-  const result = await build({
-    entryPoints: ['./src/formats.ts'],
-    bundle: false,
-    format: 'esm',
-    outbase: process.cwd(),
-    outfile: Path.resolve(
-      outDir,
-      Path.relative(process.cwd(), require.resolve('ajv-formats/dist/formats'))
-    ),
-    platform: 'neutral',
-    target: 'node10',
-    write: false,
-  });
-
-  for (const outFile of result.outputFiles) {
-    console.log('Adding', Path.relative(outDir, outFile.path));
-    embeddedFilesPromises.push(
-      Promise.resolve({
-        content: outFile.text,
-        fileName: Path.relative(outDir, outFile.path),
-      })
-    );
-  }
-
-  const ajvCompileFiles = await FastGlob('./dist/compile/**/*.(js|d.ts)', {
-    cwd: Path.dirname(require.resolve('ajv/package.json')),
-    absolute: true,
-  });
-  const fastDeepEqualFiles = await FastGlob('./**/*.(js|d.ts)', {
-    cwd: Path.dirname(require.resolve('fast-deep-equal/package.json')),
-    absolute: true,
-  });
-  const nodeModuleFiles = [
-    require.resolve('ajv/package.json'),
-    ...ajvCompileFiles,
-    ...fastDeepEqualFiles,
-  ];
-
-  for (const fileName of nodeModuleFiles) {
-    embeddedFilesPromises.push(
-      Fs.readFile(fileName, 'utf8').then((content) => {
-        return {
-          fileName: Path.relative(process.cwd(), fileName),
-          content,
-        };
-      })
-    );
-  }
 
   return Promise.all(embeddedFilesPromises);
 }

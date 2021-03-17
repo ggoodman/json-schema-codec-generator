@@ -1,32 +1,14 @@
-import RollupPluginCommonJs from '@rollup/plugin-commonjs';
-import RollupPluginTs from '@wessberg/rollup-plugin-ts';
 import Ajv, { Options } from 'ajv';
 import addFormats, { FormatOptions } from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone';
+import * as Esbuild from 'esbuild-wasm';
 import { JSONSchema, Parser } from 'json-schema-to-dts';
-import * as Path from 'path';
-import { format } from 'prettier';
-import { ModuleFormat, OutputAsset, OutputChunk, rollup } from 'rollup';
-import { VIRTUAL_ROOT } from './constants';
-import { staticFiles } from './embedded';
+import { staticFiles } from './generated/embedded';
+import { resolveAsync } from './resolve';
 
 export { CodecImpl } from './stub/codec';
-export type { Codec } from './stub/codec';
+export type { Codec } from './stub/types';
 export { ValidationError } from './stub/validator';
-
-const indexPrelude =
-  `
-import { CodecImpl } from './codec';
-import { Codec } from './codec';
-import * as Types from './types';
-import * as Validators from './validators';
-export { Codec, Types };
-`.trim() + '\n';
-const validationPrelude =
-  `
-import * as Types from './types';
-import { ValidateFunction } from './validator';  
-`.trim() + '\n';
 
 export interface SchemaEntry {
   uri: string;
@@ -38,7 +20,7 @@ export interface GenerateCodecCodeOptions {
   ajvOptions?: Omit<Options, 'allErrors' | 'code' | 'inlineRefs'>;
   ajvFormatsOptions?: FormatOptions;
   validateFormats?: boolean;
-  moduleFormat?: ModuleFormat;
+  moduleFormat?: Esbuild.Format;
 }
 
 export async function generateCodecCode(
@@ -71,8 +53,8 @@ export async function generateCodecCode(
    * regex-based code rewriting of `exports.<symbol> = ` to `export const <symbol> = `.
    */
   const exportedNames = new Set<string>();
-  const validationFunctionDefinitions: string[] = [];
   const codecDefinitions: string[] = [];
+  const codecInstances: string[] = [];
 
   for (const { schema, uri, preferredName } of schemas) {
     const schemaWithId: JSONSchema = { $id: uri, ...schema };
@@ -90,11 +72,11 @@ export async function generateCodecCode(
 
     ajv.addSchema(schemaWithId, name);
 
-    validationFunctionDefinitions.push(`export const ${name}: ValidateFunction<Types.${name}>;`);
-    codecDefinitions.push(
+    codecDefinitions.push(`${name}: Codec<Types.${name}>`);
+    codecInstances.push(
       `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
         uri
-      )}, Validators.${name}) as Codec<Types.${name}>`
+      )}, ${validatorNameForCodec(name)}) as Codec<Types.${name}>`
     );
   }
 
@@ -123,6 +105,7 @@ export async function generateCodecCode(
   // we find one that has already been seen, we can replace it with a dummy identifier.
   const seenFunctionNames = new Set<string>();
   let nextDummyFunctionSuffix = 0;
+  let nextImportSuffix = 0;
 
   // The generated standalone validation code is in CommonJS. In order to
   // make a slimmer build, we're going to rewrite this to ESM. We replace
@@ -138,12 +121,46 @@ export async function generateCodecCode(
         );
       }
 
-      return `export const ${exportName} =`;
+      return `const ${validatorNameForCodec(exportName)} =`;
     })
     // We also need to rewrite some CommonJS imports added by AJV
-    .replace(/const\s+(\S+)\s*=\s*require\(([^)]+)\).default/gm, (match, importName, spec) => {
-      return `import ${importName} from ${spec}`;
-    })
+    .replace(
+      /const\s+(\S+)\s*=\s*require\(([^)]+)\)(?:\.([\w.]+))?/gm,
+      (_match: string, importName: string, spec: string, ref?: string) => {
+        // The idea of this function is to convert stuff like
+        //   const foo = require('bar').baz.zork;
+        // into
+        //   import { baz: tmp_1 } from 'bar';
+        //   const foo = tmp_1.zork;
+        // However, since we don't know the nesting depth ahead of time, we need
+        // to jump through a bunch of hoops.
+
+        if (!ref) {
+          return `import ${importName} from ${spec}`;
+        }
+
+        const parts = ref.split('.');
+        const firstSegment = parts.shift();
+
+        if (!ref.length) {
+          return `import { ${firstSegment} as ${importName} } from ${spec}`;
+        }
+
+        let nesting = '';
+
+        for (const part of parts) {
+          if (part.startsWith('[')) {
+            nesting += part;
+          } else {
+            nesting += `.${part}`;
+          }
+        }
+
+        const intermediateName = `${importName}__${nextImportSuffix++}`;
+
+        return `import { ${firstSegment} as ${intermediateName} } from ${spec}; const ${importName} = ${intermediateName}${nesting}`;
+      }
+    )
     .replace(/^function validate\d+/gm, (match) => {
       if (seenFunctionNames.has(match)) {
         // These 'dummy' functions should be eliminated by Rollup's tree shaking
@@ -155,233 +172,178 @@ export async function generateCodecCode(
       return match;
     });
 
-  const compilerOptions = {
-    allowJs: true,
-    allowSyntheticDefaultImports: true,
-    alwaysStrict: true,
-    baseUrl: 'src',
-    checkJs: false,
-    declaration: true,
-    declarationMap: false,
-    downlevelIteration: false,
-    esModuleInterop: true,
-    // isolatedModules: true,
-    importHelpers: true,
-    lib: ['es5'],
-    skipDefaultLibCheck: true,
-    skipLibCheck: true,
-    module: 'commonjs',
-    moduleResolution: 'node',
-    outDir: 'dist',
-    rootDir: 'src',
-    target: 'es2017',
-  };
-  const tsConfig = {
-    include: ['src'],
-    compilerOptions,
-  };
-
-  const vfs = { ...staticFiles };
-
-  vfs[Path.join(VIRTUAL_ROOT, 'src/index.ts')] =
-    `
-    ${indexPrelude}
-
-    export const Codecs = {
-    ${codecDefinitions.join(',\n')}
-    } as const;
-  `.trim() + '\n';
-
-  vfs[Path.join(VIRTUAL_ROOT, 'src/types.ts')] =
-    `
-    ${schemaTypeDefs}
-  `.trim() + '\n';
-
-  vfs[Path.join(VIRTUAL_ROOT, 'src/validators.js')] =
-    `
-    ${validationCode}
-  `.trim() + '\n';
-
-  vfs[Path.join(VIRTUAL_ROOT, 'src/validators.d.ts')] =
-    `
-    ${validationPrelude}
-    ${validationFunctionDefinitions.join('\n')}
-  `.trim() + '\n';
-
-  vfs[Path.join(VIRTUAL_ROOT, 'tsconfig.json')] = JSON.stringify(tsConfig);
-
-  const build = await rollup({
-    input: Path.resolve(VIRTUAL_ROOT, 'src/index.ts'),
-    treeshake: {
-      moduleSideEffects: (id) => {
-        // console.debug('moduleHasSideEffects(%s, %s)', id, isExternal);
-
-        // Make sure unreferenced modules can be tree-shaken by forcing
-        // them to be considered side-effect-free.
-        return false;
-      },
+  const bundleResult = await Esbuild.build({
+    bundle: true,
+    define: {
+      'process.env.NODE_ENV': JSON.stringify('production'),
     },
+    format: moduleFormat,
+    outfile: 'codecs.js',
+    platform: 'neutral',
     plugins: [
-      virtualFileSystemPlugin(vfs),
-      RollupPluginTs({
-        cwd: VIRTUAL_ROOT,
-        transpiler: 'babel',
-        browserslist: 'node 10',
-        tsconfig: compilerOptions,
-        // transpileOnly: true,
-        fileSystem: createVirtualFilesystem(vfs),
-      }),
-      RollupPluginCommonJs({
-        transformMixedEsModules: true,
-      }),
       {
-        name: 'prettier',
-        renderChunk: async (code, chunk) => {
-          return {
-            code: format(code, {
-              filepath: Path.join(process.cwd(), chunk.fileName),
-            }),
+        name: 'resolve',
+        setup(build) {
+          build.onResolve(
+            { filter: /^ajv\/dist\// },
+            async ({ importer, kind, path, resolveDir }) => {
+              // console.log('onResolve[ajv](%O)', { importer, kind, path, resolveDir });
+              try {
+                const dist = require.resolve(path, { paths: [resolveDir] });
+                const found = await resolveAsync(
+                  dist.replace('ajv/dist/', 'ajv/lib/').replace(/\.js$/, ''),
+                  {
+                    basedir: resolveDir,
+                    extensions: ['.js', '.ts'],
+                  }
+                );
+
+                if (!found) {
+                  return {
+                    errors: [
+                      {
+                        text: `Unable to find the un-transpiled source for ${path}`,
+                      },
+                    ],
+                  };
+                }
+
+                return {
+                  path: found,
+                  namespace: 'file',
+                };
+              } catch (err) {
+                return {
+                  errors: [
+                    {
+                      text: `Error while attempting to resolve ${path}: ${err.message}`,
+                    },
+                  ],
+                };
+              }
+            }
+          );
+
+          build.onResolve(
+            { filter: /^ajv-formats\/dist\// },
+            async ({ importer, kind, path, resolveDir }) => {
+              // console.log('onResolve[ajv-formats](%O)', { importer, kind, path, resolveDir });
+              try {
+                const dist = require.resolve(path, { paths: [resolveDir] });
+                const found = await resolveAsync(
+                  dist.replace('ajv-formats/dist/', 'ajv-formats/src/').replace(/\.js$/, ''),
+                  {
+                    basedir: resolveDir,
+                    extensions: ['.js', '.ts'],
+                  }
+                );
+
+                if (!found) {
+                  return {
+                    errors: [
+                      {
+                        text: `Unable to find the un-transpiled source for ${path}`,
+                      },
+                    ],
+                  };
+                }
+
+                return {
+                  path: found,
+                  namespace: 'file',
+                };
+              } catch (err) {
+                return {
+                  errors: [
+                    {
+                      text: `Error while attempting to resolve ${path}: ${err.message}`,
+                    },
+                  ],
+                };
+              }
+            }
+          );
+
+          const resolveMap: Record<string, { namespace: string; path: string }> = {
+            './codec': {
+              namespace: 'embedded',
+              path: 'src/codec.ts',
+            },
+            './validator': {
+              namespace: 'embedded',
+              path: 'src/validator.ts',
+            },
           };
+
+          build.onResolve({ filter: /.*/ }, async ({ importer, kind, path, resolveDir }) => {
+            // console.log('onResolve[mapped](%O)', { importer, kind, path, resolveDir });
+            const mapped = resolveMap[path];
+
+            if (mapped) {
+              return mapped;
+            }
+
+            return undefined;
+          });
+
+          build.onLoad({ filter: /.*/, namespace: 'embedded' }, ({ namespace, path }) => {
+            const contents = staticFiles[path];
+
+            if (contents) {
+              return {
+                contents,
+                loader: 'ts',
+              };
+            }
+          });
         },
       },
     ],
-    onwarn: (warning) => {
-      console.warn(warning.message);
+    stdin: {
+      contents: `
+import { CodecImpl } from './codec';
+
+${validationCode}
+
+export const Codecs = {
+  ${codecInstances.join(',\n')}
+} as const;
+
+      `,
+      loader: 'ts',
+      sourcefile: 'src/index.ts',
     },
+    target: 'node10',
+    treeShaking: true,
+    write: false,
   });
 
-  const output = await build.generate({
-    dir: Path.resolve(VIRTUAL_ROOT, 'dist'),
-    format: moduleFormat,
-  });
-
-  const javaScriptChunk = output.output.find(
-    (chunk) => chunk.type === 'chunk' && chunk.fileName === 'index.js'
-  ) as OutputChunk | undefined;
-  if (!javaScriptChunk) {
-    throw new Error(`Invariant violation: The build failed to produce a JavaScript bundle.`);
+  if (bundleResult.outputFiles.length !== 1) {
+    throw new Error(
+      `Invariant violation: Produced ${bundleResult.outputFiles.length}, expecting exactly 1`
+    );
   }
 
-  const typeDefinitionChunk = output.output.find(
-    (chunk) => chunk.type === 'asset' && chunk.fileName === 'index.d.ts'
-  ) as OutputAsset | undefined;
-  if (!typeDefinitionChunk) {
-    throw new Error(`Invariant violation: The build failed to produce a JavaScript bundle.`);
-  }
+  const javaScript = bundleResult.outputFiles[0].text;
+  const typeDefinitions = `
+${staticFiles['src/types.ts']}
+
+export namespace Types {
+  ${schemaTypeDefs.split('\n').join('\n  ')}
+}
+
+export declare const Codecs: {
+  ${codecDefinitions.join(',\n  ')}
+};
+  `;
 
   return {
-    javaScript: javaScriptChunk.code,
-    typeDefinitions: typeDefinitionChunk.source,
+    javaScript,
+    typeDefinitions,
     schamaPathsToCodecNames: uriToExportedName,
   };
 }
 
-function virtualFileSystemPlugin(vfs: { [key: string]: string }): import('rollup').Plugin {
-  return {
-    name: 'vfs',
-    resolveId: async (source, importer) => {
-      const candidateExt = ['', '.js', '.ts'];
-      const [sourceBase, suffix = ''] = source.split('?', 2);
-
-      let resolved = importer ? Path.resolve(Path.dirname(importer), sourceBase) : sourceBase;
-
-      if (!sourceBase.startsWith('/') && !sourceBase.startsWith('.')) {
-        resolved = `/virtual/src/node_modules/${sourceBase}`;
-        // Solve for the case where node will consider a directory with an index also
-        candidateExt.push(...candidateExt.map((ext) => `/index${ext}`));
-      }
-
-      for (const ext of candidateExt) {
-        const candidate = `${resolved}${ext}`;
-
-        if (candidate in vfs) {
-          // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, candidate, '✅');
-          return `${candidate}${suffix}`;
-        }
-        // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, candidate, '❌');
-      }
-
-      // console.debug('vfs.resolveId(%s, %s): %s', sourceBase, importer, undefined);
-    },
-    load: async (source) => {
-      // console.debug('vfs.load(%s)', source);
-      return vfs[source];
-    },
-  };
+function validatorNameForCodec(codecName: string) {
+  return `__validate_${codecName}`;
 }
-
-function createVirtualFilesystem(
-  vfs: Record<string, string>
-): import('@wessberg/rollup-plugin-ts').TypescriptPluginOptions['fileSystem'] {
-  const virtualFs: import('@wessberg/rollup-plugin-ts').TypescriptPluginOptions['fileSystem'] = {
-    directoryExists: (dirName) =>
-      Object.keys(vfs).some((pathName) => pathName.startsWith(`${dirName}/`)),
-    ensureDirectory: (dirName) => dirName,
-    fileExists: (fileName) => fileName in vfs,
-    getDirectories: (dirName) => {
-      const dirNames = new Set<string>();
-      const prefix = `${dirName}/`;
-
-      for (const fileName in vfs) {
-        if (fileName.startsWith(prefix)) {
-          const rest = fileName.slice(prefix.length).split('/');
-
-          if (rest.length > 1) {
-            dirNames.add(rest[0]);
-          }
-        }
-      }
-
-      return [...dirNames];
-    },
-    newLine: '\n',
-    readDirectory: (dirName, extensions, excludes, includes, depth = 20) => {
-      const prefix = `${dirName}/`;
-      const readResults = new Set<string>();
-
-      for (const fileName in vfs) {
-        if (fileName.startsWith(prefix)) {
-          const rest = fileName.slice(prefix.length).split('/');
-
-          readResults.add(`${prefix}${rest.slice(0, depth).join('/')}`);
-        }
-      }
-
-      return [...readResults];
-    },
-    readFile: (fileName) => vfs[fileName],
-    realpath: (fileName) => fileName,
-    useCaseSensitiveFileNames: true,
-    writeFile: (fileName, data) => void (vfs[fileName] = data),
-  };
-
-  return new Proxy(virtualFs, {
-    get: (target, p) => {
-      const found = Reflect.get(target, p);
-
-      return typeof found === 'function'
-        ? (...args: any[]) => {
-            const res = found(...args);
-            // console.debug(
-            //   p,
-            //   ...args,
-            //   '=>',
-            //   typeof res === 'string' || Buffer.isBuffer(res) ? res.toString().slice(0, 30) : res
-            // );
-
-            return res;
-          }
-        : found;
-    },
-  });
-}
-
-// async function main() {
-//   return await withCleanup(async (defer) => {
-//     const tmpDir = await Fs.mkdtemp('codec-', { encoding: 'utf-8' });
-//     defer(() => Fs.rmdir(tmpDir, { recursive: true, maxRetries: 2 }));
-
-//     for await (const entry of Fs.readdir())
-
-//   });
-// }
