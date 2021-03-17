@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.4.1] - 2021-03-17
 ### Fixed
 - Fixed publishing workflow.
 
@@ -52,7 +54,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [#1]: https://github.com/ggoodman/json-schema-codec-generator/issues/1
 
-[Unreleased]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.3.2...v0.4.0
 [0.3.2]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.3.0...v0.3.1
