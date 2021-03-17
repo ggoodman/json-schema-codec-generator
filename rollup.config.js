@@ -13,6 +13,7 @@ import { builtinModules } from 'module';
 import * as Path from 'path';
 import * as Rollup from 'rollup';
 import * as Package from './package.json';
+import { build } from 'esbuild';
 
 const SPEC_RX = /^(@[^/]+\/[^/@]+|[^./@][^/@]*)(.*)?$/;
 
@@ -124,14 +125,39 @@ async function readEmbeddedFiles(ctx, embeddedSourceDir) {
     );
   }
 
+  const outDir = `/fake/path`;
+  const result = await build({
+    entryPoints: ['./src/formats.ts'],
+    bundle: false,
+    format: 'esm',
+    outbase: process.cwd(),
+    outfile: Path.resolve(
+      outDir,
+      Path.relative(process.cwd(), require.resolve('ajv-formats/dist/formats'))
+    ),
+    platform: 'neutral',
+    target: 'node10',
+    write: false,
+  });
+
+  for (const outFile of result.outputFiles) {
+    console.log('Adding', Path.relative(outDir, outFile.path));
+    embeddedFilesPromises.push(
+      Promise.resolve({
+        content: outFile.text,
+        fileName: Path.relative(outDir, outFile.path),
+      })
+    );
+  }
+
   const ajvCompileFiles = await FastGlob('./dist/compile/**/*.(js|d.ts)', {
     cwd: Path.dirname(require.resolve('ajv/package.json')),
     absolute: true,
-  })
+  });
   const fastDeepEqualFiles = await FastGlob('./**/*.(js|d.ts)', {
     cwd: Path.dirname(require.resolve('fast-deep-equal/package.json')),
     absolute: true,
-  })
+  });
   const nodeModuleFiles = [
     require.resolve('ajv/package.json'),
     ...ajvCompileFiles,

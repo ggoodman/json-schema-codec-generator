@@ -1,11 +1,12 @@
 import RollupPluginCommonJs from '@rollup/plugin-commonjs';
 import RollupPluginTs from '@wessberg/rollup-plugin-ts';
 import Ajv, { Options } from 'ajv';
+import addFormats, { FormatOptions } from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone';
 import { JSONSchema, Parser } from 'json-schema-to-dts';
 import * as Path from 'path';
 import { format } from 'prettier';
-import { OutputAsset, OutputChunk, rollup } from 'rollup';
+import { ModuleFormat, OutputAsset, OutputChunk, rollup } from 'rollup';
 import { VIRTUAL_ROOT } from './constants';
 import { staticFiles } from './embedded';
 
@@ -33,14 +34,21 @@ export interface SchemaEntry {
   preferredName?: string;
 }
 
-export interface GenerateCodecCodeOptions
-  extends Omit<Options, 'allErrors' | 'code' | 'inlineRefs'> {}
+export interface GenerateCodecCodeOptions {
+  ajvOptions?: Omit<Options, 'allErrors' | 'code' | 'inlineRefs'>;
+  ajvFormatsOptions?: FormatOptions;
+  validateFormats?: boolean;
+  moduleFormat?: ModuleFormat;
+}
 
-export async function generateCodecCode(schemas: SchemaEntry[], options: GenerateCodecCodeOptions = {}) {
+export async function generateCodecCode(
+  schemas: SchemaEntry[],
+  options: GenerateCodecCodeOptions = {}
+) {
   const parser = new Parser();
   const ajv = new Ajv({
     verbose: true,
-    ...options,
+    ...(options.ajvOptions ?? {}),
     allErrors: true,
     code: {
       es5: false, // use es6
@@ -51,6 +59,11 @@ export async function generateCodecCode(schemas: SchemaEntry[], options: Generat
     inlineRefs: false,
   });
 
+  if (options.validateFormats) {
+    addFormats(ajv, options.ajvFormatsOptions);
+  }
+
+  const moduleFormat = options.moduleFormat || 'cjs';
   const exportedNameToSchema: Record<string, JSONSchema> = {};
   const uriToExportedName: Record<string, string> = {};
   /**
@@ -239,7 +252,7 @@ export async function generateCodecCode(schemas: SchemaEntry[], options: Generat
 
   const output = await build.generate({
     dir: Path.resolve(VIRTUAL_ROOT, 'dist'),
-    format: 'cjs',
+    format: moduleFormat,
   });
 
   const javaScriptChunk = output.output.find(
