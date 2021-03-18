@@ -29,9 +29,6 @@ export interface ErrorObject {
   data: unknown;
 }
 
-export interface ValidationErrorStatic {
-}
-
 export declare class ValidationError extends Error {
   static isValidationError(err: unknown): err is ValidationError;
   
