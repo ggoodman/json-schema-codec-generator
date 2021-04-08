@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Fixed check for type-level compatibility between the local `ErrorObject` and the `ajv` equivalent.
+  
+  This was tripping up downstream build tools and so it was moved from the runtime code to the test suite (where it should have been from the beginning).
 
 ## [0.6.0] - 2021-04-08
 ### Changed
