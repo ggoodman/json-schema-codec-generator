@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Upgrade to `ajv@8.x` and `ajv-formats@2.x`.
+  
+  These upgrades dramatically reduce the amount of messy code manipulation needed to preprocess the 'standalone' code produced by ajv. This should make it simpler and less risky to upgrade ajv versions on an ongoing basis.
 
 ## [0.5.0] - 2021-04-08
 ### Added
