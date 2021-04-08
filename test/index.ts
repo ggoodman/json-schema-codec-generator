@@ -2,6 +2,7 @@
 
 import Module from 'module';
 import { Codec, generateCodecCode } from '../src';
+import type { ErrorObject } from '../src/stub/types';
 
 describe('Codec generation', () => {
   it('will produce the expected code', async () => {
@@ -182,5 +183,9 @@ describe('Codec generation', () => {
 
       expect(got).toEqual(want);
     }
+  });
+
+  it('exports a ErrorObject type that is compatible with the ajv equivalent', () => {
+    ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
   });
 });
