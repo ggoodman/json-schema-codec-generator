@@ -133,4 +133,49 @@ describe('Codec generation', () => {
               should match format \\"uri\\" at /url, got \\"string\\""
           `);
   });
+
+  it('will export ValidationError', async () => {
+    const { javaScript, schamaPathsToCodecNames, typeDefinitions } = await generateCodecCode(
+      [
+        {
+          schema: {
+            title: 'A Bookmark',
+            type: 'object',
+          },
+          uri: 'file:///Bookmark.json',
+          preferredName: 'Bookmark',
+        },
+      ],
+      {
+        moduleFormat: 'cjs',
+        validateFormats: true,
+      }
+    );
+
+    const mod = new Module('schema', module);
+    const instantiate = new Function('module', 'exports', 'require', javaScript);
+
+    instantiate(mod, mod.exports, require);
+
+    {
+      const want = 'function';
+      const got = typeof mod.exports.ValidationError;
+
+      expect(got).toEqual(want);
+    }
+    {
+      const want = 'function';
+      const got = typeof mod.exports.ValidationError.isValidationError;
+
+      expect(got).toEqual(want);
+    }
+
+    {
+      const err = new mod.exports.ValidationError('foo', {}, []);
+      const want = true;
+      const got = mod.exports.ValidationError.isValidationError(err);
+
+      expect(got).toEqual(want);
+    }
+  });
 });

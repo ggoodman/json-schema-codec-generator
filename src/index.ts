@@ -16,7 +16,9 @@ export interface SchemaEntry {
   preferredName?: string;
 }
 
+type AnyType = "any" | "JSONValue" | "unknown";
 export interface GenerateCodecCodeOptions {
+  anyType?: AnyType;
   ajvOptions?: Omit<Options, 'allErrors' | 'code' | 'inlineRefs'>;
   ajvFormatsOptions?: FormatOptions;
   validateFormats?: boolean;
@@ -85,6 +87,7 @@ export async function generateCodecCode(
       hasDeclareKeyword: false,
       isExported: true,
     },
+    anyType: options.anyType ?? 'JSONValue',
   });
 
   if (diagnostics.length) {
@@ -302,6 +305,7 @@ export async function generateCodecCode(
     stdin: {
       contents: `
 import { CodecImpl } from './codec';
+export * from './validator';
 
 ${validationCode}
 

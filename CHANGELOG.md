@@ -6,8 +6,21 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Introduce the `anyType` option for chosing the type to be used for unconstained JSON Schemas, object values and array items.
+  
+  This is useful, for example, if the restrictiveness of the default `"JSONValue"` (designed to represent any valid JSON value) is getting in the way. We introduce the following new options:
+  
+  - `"any"` - Unconstrained values will be typed as `any`.
+  - `"unknown"` - Unconstrained values will be typed as `unknown`.
+
 ### Changed
 - Bump `json-schema-to-dts` to a version allowing the selection of an `anyType`.
+
+### Fixed
+- Export a reference to `ValidationError` as indicated by the generated type definitions.
+  
+  This may be helpful for logic consuming the code produced by this library if it wants to be able to use an `instanceof` check to identify `ValidationError` instances. Alternatively, the `ValidationError.isValidationError` method can be used as a TypeScript type guard to perform a similar check.
 
 ## [0.4.5] - 2021-03-18
 ### Fixed
