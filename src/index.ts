@@ -4,7 +4,6 @@ import standaloneCode from 'ajv/dist/standalone';
 import * as Esbuild from 'esbuild-wasm';
 import { JSONSchema, Parser } from 'json-schema-to-dts';
 import { staticFiles } from './generated/embedded';
-import { resolveAsync } from './resolve';
 
 export { CodecImpl } from './stub/codec';
 export type { Codec } from './stub/types';
@@ -32,6 +31,7 @@ export async function generateCodecCode(
   const parser = new Parser();
   const ajv = new Ajv({
     verbose: true,
+    validateFormats: options.validateFormats,
     ...(options.ajvOptions ?? {}),
     allErrors: true,
     code: {
@@ -72,13 +72,13 @@ export async function generateCodecCode(
     uriToExportedName[uri] = name;
     exportedNameToSchema[name] = schemaWithId;
 
-    ajv.addSchema(schemaWithId, name);
+    ajv.addSchema(schemaWithId, validatorNameForCodec(name));
 
     codecDefinitions.push(`${name}: Codec<Types.${name}>`);
     codecInstances.push(
       `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
         uri
-      )}, ${validatorNameForCodec(name)}) as Codec<Types.${name}>`
+      )}, exports.${validatorNameForCodec(name)}) as Codec<Types.${name}>`
     );
   }
 
@@ -99,82 +99,6 @@ export async function generateCodecCode(
   }
 
   const standaloneValidationCode = standaloneCode(ajv);
-
-  // There appears to be a bug in AJV code generation that writes the same function
-  // more than once to the resulting validation code when there are $refs between
-  // multiple schemas. This isn't strictly wrong since JavaScript allows redefinition
-  // of functions but causes babel / TypeScript to barf.
-  // We use this to track validation function names that are observed so that if
-  // we find one that has already been seen, we can replace it with a dummy identifier.
-  const seenFunctionNames = new Set<string>();
-  let nextDummyFunctionSuffix = 0;
-  let nextImportSuffix = 0;
-
-  // The generated standalone validation code is in CommonJS. In order to
-  // make a slimmer build, we're going to rewrite this to ESM. We replace
-  // CommonJS export statements corresponding to entries in `exportedNames`
-  // with ESM constant exports.
-  const validationCode = standaloneValidationCode
-    .replace(/^(?:module\.\s*)?exports.(\w+)\s*=/gm, (match, exportName) => {
-      if (!exportedNames.has(exportName)) {
-        throw new Error(
-          `Invariant violation: The generated validation code contains the following CommonJS export ${JSON.stringify(
-            match
-          )} but there is no known exported type ${JSON.stringify(exportName)}`
-        );
-      }
-
-      return `const ${validatorNameForCodec(exportName)} =`;
-    })
-    // We also need to rewrite some CommonJS imports added by AJV
-    .replace(
-      /const\s+(\S+)\s*=\s*require\(([^)]+)\)(?:\.([\w.]+))?/gm,
-      (_match: string, importName: string, spec: string, ref?: string) => {
-        // The idea of this function is to convert stuff like
-        //   const foo = require('bar').baz.zork;
-        // into
-        //   import { baz: tmp_1 } from 'bar';
-        //   const foo = tmp_1.zork;
-        // However, since we don't know the nesting depth ahead of time, we need
-        // to jump through a bunch of hoops.
-
-        if (!ref) {
-          return `import ${importName} from ${spec}`;
-        }
-
-        const parts = ref.split('.');
-        const firstSegment = parts.shift();
-
-        if (!ref.length) {
-          return `import { ${firstSegment} as ${importName} } from ${spec}`;
-        }
-
-        let nesting = '';
-
-        for (const part of parts) {
-          if (part.startsWith('[')) {
-            nesting += part;
-          } else {
-            nesting += `.${part}`;
-          }
-        }
-
-        const intermediateName = `${importName}__${nextImportSuffix++}`;
-
-        return `import { ${firstSegment} as ${intermediateName} } from ${spec}; const ${importName} = ${intermediateName}${nesting}`;
-      }
-    )
-    .replace(/^function validate\d+/gm, (match) => {
-      if (seenFunctionNames.has(match)) {
-        // These 'dummy' functions should be eliminated by Rollup's tree shaking
-        return `${match}ShakeMePlease${nextDummyFunctionSuffix++}`;
-      }
-
-      seenFunctionNames.add(match);
-
-      return match;
-    });
-
   const bundleResult = await Esbuild.build({
     bundle: true,
     define: {
@@ -187,85 +111,6 @@ export async function generateCodecCode(
       {
         name: 'resolve',
         setup(build) {
-          build.onResolve(
-            { filter: /^ajv\/dist\// },
-            async ({ importer, kind, path, resolveDir }) => {
-              // console.log('onResolve[ajv](%O)', { importer, kind, path, resolveDir });
-              try {
-                const dist = require.resolve(path, { paths: [resolveDir] });
-                const found = await resolveAsync(
-                  dist.replace('ajv/dist/', 'ajv/lib/').replace(/\.js$/, ''),
-                  {
-                    basedir: resolveDir,
-                    extensions: ['.js', '.ts'],
-                  }
-                );
-
-                if (!found) {
-                  return {
-                    errors: [
-                      {
-                        text: `Unable to find the un-transpiled source for ${path}`,
-                      },
-                    ],
-                  };
-                }
-
-                return {
-                  path: found,
-                  namespace: 'file',
-                };
-              } catch (err) {
-                return {
-                  errors: [
-                    {
-                      text: `Error while attempting to resolve ${path}: ${err.message}`,
-                    },
-                  ],
-                };
-              }
-            }
-          );
-
-          build.onResolve(
-            { filter: /^ajv-formats\/dist\// },
-            async ({ importer, kind, path, resolveDir }) => {
-              // console.log('onResolve[ajv-formats](%O)', { importer, kind, path, resolveDir });
-              try {
-                const dist = require.resolve(path, { paths: [resolveDir] });
-                const found = await resolveAsync(
-                  dist.replace('ajv-formats/dist/', 'ajv-formats/src/').replace(/\.js$/, ''),
-                  {
-                    basedir: resolveDir,
-                    extensions: ['.js', '.ts'],
-                  }
-                );
-
-                if (!found) {
-                  return {
-                    errors: [
-                      {
-                        text: `Unable to find the un-transpiled source for ${path}`,
-                      },
-                    ],
-                  };
-                }
-
-                return {
-                  path: found,
-                  namespace: 'file',
-                };
-              } catch (err) {
-                return {
-                  errors: [
-                    {
-                      text: `Error while attempting to resolve ${path}: ${err.message}`,
-                    },
-                  ],
-                };
-              }
-            }
-          );
 
           const resolveMap: Record<string, { namespace: string; path: string }> = {
             './codec': {
@@ -307,7 +152,7 @@ export async function generateCodecCode(
 import { CodecImpl } from './codec';
 export * from './validator';
 
-${validationCode}
+${standaloneValidationCode}
 
 export const Codecs = {
   ${codecInstances.join(',\n')}
@@ -316,6 +161,7 @@ export const Codecs = {
       `,
       loader: 'ts',
       sourcefile: 'src/index.ts',
+      resolveDir: __dirname,
     },
     target: 'node10',
     treeShaking: true,

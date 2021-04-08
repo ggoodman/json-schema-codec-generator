@@ -1,4 +1,4 @@
-import type { ErrorObject } from './types';
+import type { ErrorObject } from "ajv";
 
 export class ValidationError extends Error {
   static isValidationError(err: unknown): err is ValidationError {
@@ -10,7 +10,7 @@ export class ValidationError extends Error {
 
   constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]) {
     const errorStrings = validatorErrors.map((err) => {
-      return `  ${err.message} at ${err.dataPath || '#'}, got ${valueToShapeString(err.data)}`;
+      return `  ${err.message} at ${err.instancePath || '#'}, got ${valueToShapeString(err.data)}`;
     });
 
     super(

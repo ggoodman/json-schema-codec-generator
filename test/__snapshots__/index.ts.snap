@@ -8,7 +8,7 @@ var __export = (target, all) => {
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
-// src/index.ts
+// src/src/index.ts
 __markAsModule(exports);
 __export(exports, {
   Codecs: () => Codecs,
@@ -22,7 +22,7 @@ var ValidationError = class extends Error {
   }
   constructor(schemaName, value, validatorErrors) {
     const errorStrings = validatorErrors.map((err) => {
-      return \`  \${err.message} at \${err.dataPath || \\"#\\"}, got \${valueToShapeString(err.data)}\`;
+      return \`  \${err.message} at \${err.instancePath || \\"#\\"}, got \${valueToShapeString(err.data)}\`;
     });
     super(\`Validation for the schema \${JSON.stringify(schemaName)} failed with the following errors:
 \${errorStrings.join(\\"\\\\n\\")}\`);
@@ -58,17 +58,17 @@ var CodecImpl = class {
   }
 };
 
-// src/index.ts
-var __validate_User = validate21;
+// src/src/index.ts
+exports.__validate_User = validate21;
 var schema6 = {$id: \\"file:///User.json\\", title: \\"A User Object\\", description: \\"A user is a known visitor.\\", type: \\"object\\", properties: {id: {type: \\"string\\"}, name: {type: \\"string\\"}}, required: [\\"id\\", \\"name\\"]};
-function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
+function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
   ;
   let vErrors = null;
   let errors = 0;
   const _errs0 = errors;
   if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
     if (data.id === void 0) {
-      const err0 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"id\\"}, message: \\"should have required property 'id'\\", schema: schema6.required, parentSchema: schema6, data};
+      const err0 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"id\\"}, message: \\"must have required property 'id'\\", schema: schema6.required, parentSchema: schema6, data};
       if (vErrors === null) {
         vErrors = [err0];
       } else {
@@ -77,7 +77,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.name === void 0) {
-      const err1 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"name\\"}, message: \\"should have required property 'name'\\", schema: schema6.required, parentSchema: schema6, data};
+      const err1 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"name\\"}, message: \\"must have required property 'name'\\", schema: schema6.required, parentSchema: schema6, data};
       if (vErrors === null) {
         vErrors = [err1];
       } else {
@@ -89,7 +89,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data0 = data.id;
       const _errs1 = errors;
       if (typeof data0 !== \\"string\\") {
-        const err2 = {keyword: \\"type\\", dataPath: dataPath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema6.properties.id.type, parentSchema: schema6.properties.id, data: data0};
+        const err2 = {instancePath: instancePath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.id.type, parentSchema: schema6.properties.id, data: data0};
         if (vErrors === null) {
           vErrors = [err2];
         } else {
@@ -104,7 +104,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data1 = data.name;
       const _errs3 = errors;
       if (typeof data1 !== \\"string\\") {
-        const err3 = {keyword: \\"type\\", dataPath: dataPath + \\"/name\\", schemaPath: \\"#/properties/name/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema6.properties.name.type, parentSchema: schema6.properties.name, data: data1};
+        const err3 = {instancePath: instancePath + \\"/name\\", schemaPath: \\"#/properties/name/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.name.type, parentSchema: schema6.properties.name, data: data1};
         if (vErrors === null) {
           vErrors = [err3];
         } else {
@@ -116,7 +116,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       var valid0 = _errs3 === errors;
     }
   } else {
-    const err4 = {keyword: \\"type\\", dataPath, schemaPath: \\"#/type\\", params: {type: \\"object\\"}, message: \\"should be object\\", schema: schema6.type, parentSchema: schema6, data};
+    const err4 = {instancePath, schemaPath: \\"#/type\\", keyword: \\"type\\", params: {type: \\"object\\"}, message: \\"must be object\\", schema: schema6.type, parentSchema: schema6, data};
     if (vErrors === null) {
       vErrors = [err4];
     } else {
@@ -127,16 +127,16 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
   validate21.errors = vErrors;
   return errors === 0;
 }
-var __validate_BlogPost = validate22;
+exports.__validate_BlogPost = validate22;
 var schema7 = {$id: \\"file:///BlogPost.json\\", title: \\"A Blog Post\\", description: \\"A blog post represents an article associated with an author\\", type: \\"object\\", properties: {id: {type: \\"string\\"}, title: {type: \\"string\\"}, content: {type: \\"string\\"}, author: {$ref: \\"file:///User.json\\"}}, required: [\\"id\\", \\"title\\", \\"content\\", \\"user\\"]};
-function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
+function validate22(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
   ;
   let vErrors = null;
   let errors = 0;
   const _errs0 = errors;
   if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
     if (data.id === void 0) {
-      const err0 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"id\\"}, message: \\"should have required property 'id'\\", schema: schema7.required, parentSchema: schema7, data};
+      const err0 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"id\\"}, message: \\"must have required property 'id'\\", schema: schema7.required, parentSchema: schema7, data};
       if (vErrors === null) {
         vErrors = [err0];
       } else {
@@ -145,7 +145,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.title === void 0) {
-      const err1 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"title\\"}, message: \\"should have required property 'title'\\", schema: schema7.required, parentSchema: schema7, data};
+      const err1 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"title\\"}, message: \\"must have required property 'title'\\", schema: schema7.required, parentSchema: schema7, data};
       if (vErrors === null) {
         vErrors = [err1];
       } else {
@@ -154,7 +154,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.content === void 0) {
-      const err2 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"content\\"}, message: \\"should have required property 'content'\\", schema: schema7.required, parentSchema: schema7, data};
+      const err2 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"content\\"}, message: \\"must have required property 'content'\\", schema: schema7.required, parentSchema: schema7, data};
       if (vErrors === null) {
         vErrors = [err2];
       } else {
@@ -163,7 +163,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.user === void 0) {
-      const err3 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"user\\"}, message: \\"should have required property 'user'\\", schema: schema7.required, parentSchema: schema7, data};
+      const err3 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"user\\"}, message: \\"must have required property 'user'\\", schema: schema7.required, parentSchema: schema7, data};
       if (vErrors === null) {
         vErrors = [err3];
       } else {
@@ -175,7 +175,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data0 = data.id;
       const _errs1 = errors;
       if (typeof data0 !== \\"string\\") {
-        const err4 = {keyword: \\"type\\", dataPath: dataPath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema7.properties.id.type, parentSchema: schema7.properties.id, data: data0};
+        const err4 = {instancePath: instancePath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema7.properties.id.type, parentSchema: schema7.properties.id, data: data0};
         if (vErrors === null) {
           vErrors = [err4];
         } else {
@@ -190,7 +190,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data1 = data.title;
       const _errs3 = errors;
       if (typeof data1 !== \\"string\\") {
-        const err5 = {keyword: \\"type\\", dataPath: dataPath + \\"/title\\", schemaPath: \\"#/properties/title/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema7.properties.title.type, parentSchema: schema7.properties.title, data: data1};
+        const err5 = {instancePath: instancePath + \\"/title\\", schemaPath: \\"#/properties/title/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema7.properties.title.type, parentSchema: schema7.properties.title, data: data1};
         if (vErrors === null) {
           vErrors = [err5];
         } else {
@@ -205,7 +205,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data2 = data.content;
       const _errs5 = errors;
       if (typeof data2 !== \\"string\\") {
-        const err6 = {keyword: \\"type\\", dataPath: dataPath + \\"/content\\", schemaPath: \\"#/properties/content/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema7.properties.content.type, parentSchema: schema7.properties.content, data: data2};
+        const err6 = {instancePath: instancePath + \\"/content\\", schemaPath: \\"#/properties/content/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema7.properties.content.type, parentSchema: schema7.properties.content, data: data2};
         if (vErrors === null) {
           vErrors = [err6];
         } else {
@@ -219,7 +219,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
     if (data.author !== void 0) {
       let data3 = data.author;
       const _errs7 = errors;
-      if (!validate21(data3, {dataPath: dataPath + \\"/author\\", parentData: data, parentDataProperty: \\"author\\", rootData})) {
+      if (!validate21(data3, {instancePath: instancePath + \\"/author\\", parentData: data, parentDataProperty: \\"author\\", rootData})) {
         vErrors = vErrors === null ? validate21.errors : vErrors.concat(validate21.errors);
         errors = vErrors.length;
       } else {
@@ -227,7 +227,7 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       var valid0 = _errs7 === errors;
     }
   } else {
-    const err7 = {keyword: \\"type\\", dataPath, schemaPath: \\"#/type\\", params: {type: \\"object\\"}, message: \\"should be object\\", schema: schema7.type, parentSchema: schema7, data};
+    const err7 = {instancePath, schemaPath: \\"#/type\\", keyword: \\"type\\", params: {type: \\"object\\"}, message: \\"must be object\\", schema: schema7.type, parentSchema: schema7, data};
     if (vErrors === null) {
       vErrors = [err7];
     } else {
@@ -239,8 +239,8 @@ function validate22(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
   return errors === 0;
 }
 var Codecs = {
-  User: new CodecImpl(\\"User\\", \\"file:///User.json\\", __validate_User),
-  BlogPost: new CodecImpl(\\"BlogPost\\", \\"file:///BlogPost.json\\", __validate_BlogPost)
+  User: new CodecImpl(\\"User\\", \\"file:///User.json\\", exports.__validate_User),
+  BlogPost: new CodecImpl(\\"BlogPost\\", \\"file:///BlogPost.json\\", exports.__validate_BlogPost)
 };
 "
 `;
@@ -276,25 +276,29 @@ export interface Codec<T> {
 
 export interface ErrorObject {
   keyword: string;
-  dataPath: string;
+  instancePath: string;
   schemaPath: string;
   params: { [key: string]: unknown };
   propertyName?: string;
-  message: string;
-  schema: unknown;
+  message?: string;
+  schema?: unknown;
   data: unknown;
 }
 
-export interface ValidationErrorStatic {
+{
+  // The following is designed to catch type compatibility issues between our local
+  // ErrorObject definition and the canonical definition in ajv. This code block
+  // is designed to be compiled out, and if not, be a no-op.
+  ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
 }
 
 export declare class ValidationError extends Error {
   static isValidationError(err: unknown): err is ValidationError;
-  
+
   readonly validatorErrors: ErrorObject[];
   readonly value: unknown;
 
-  constructor (schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
+  constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
 }
 
 export interface ValidateFunction<T = unknown> {
@@ -346,7 +350,7 @@ var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, {enumerable: true, configurable: true, writable: true, value}) : obj[key] = value;
-var __assign = (a, b) => {
+var __objSpread = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp.call(b, prop))
       __defNormalProp(a, prop, b[prop]);
@@ -358,12 +362,131 @@ var __assign = (a, b) => {
   return a;
 };
 var __markAsModule = (target) => __defProp(target, \\"__esModule\\", {value: true});
+var __commonJS = (cb, mod) => () => (mod || cb((mod = {exports: {}}).exports, mod), mod.exports);
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
-// src/index.ts
+// node_modules/ajv-formats/dist/formats.js
+var require_formats = __commonJS((exports2) => {
+  \\"use strict\\";
+  Object.defineProperty(exports2, \\"__esModule\\", {value: true});
+  exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
+  function fmtDef(validate, compare) {
+    return {validate, compare};
+  }
+  exports2.fullFormats = {
+    date: fmtDef(date, compareDate),
+    time: fmtDef(time, compareTime),
+    \\"date-time\\": fmtDef(date_time, compareDateTime),
+    duration: /^P(?!$)((\\\\d+Y)?(\\\\d+M)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?|(\\\\d+W)?)$/,
+    uri,
+    \\"uri-reference\\": /^(?:[a-z][a-z0-9+\\\\-.]*:)?(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\\\\?(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i,
+    \\"uri-template\\": /^(?:(?:[^\\\\x00-\\\\x20\\"'<>%\\\\\\\\^\`{|}]|%[0-9a-f]{2})|\\\\{[+#./;?&=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?)*\\\\})*$/i,
+    url: /^(?:https?|ftp):\\\\/\\\\/(?:\\\\S+(?::\\\\S*)?@)?(?:(?!(?:10|127)(?:\\\\.\\\\d{1,3}){3})(?!(?:169\\\\.254|192\\\\.168)(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)(?:\\\\.(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)*(?:\\\\.(?:[a-z\\\\u{00a1}-\\\\u{ffff}]{2,})))(?::\\\\d{2,5})?(?:\\\\/[^\\\\s]*)?$/iu,
+    email: /^[a-z0-9!#$%&'*+/=?^_\`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i,
+    hostname: /^(?=.{1,253}\\\\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\\\\.?$/i,
+    ipv4: /^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$/,
+    ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:)))$/i,
+    regex,
+    uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
+    \\"json-pointer\\": /^(?:\\\\/(?:[^~/]|~0|~1)*)*$/,
+    \\"json-pointer-uri-fragment\\": /^#(?:\\\\/(?:[a-z0-9_\\\\-.!$&'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i,
+    \\"relative-json-pointer\\": /^(?:0|[1-9][0-9]*)(?:#|(?:\\\\/(?:[^~/]|~0|~1)*)*)$/
+  };
+  exports2.fastFormats = __objSpread(__objSpread({}, exports2.fullFormats), {
+    date: fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d$/, compareDate),
+    time: fmtDef(/^(?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i, compareTime),
+    \\"date-time\\": fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d[t\\\\s](?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)$/i, compareDateTime),
+    uri: /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/)?[^\\\\s]*$/i,
+    \\"uri-reference\\": /^(?:(?:[a-z][a-z0-9+\\\\-.]*:)?\\\\/?\\\\/)?(?:[^\\\\\\\\\\\\s#][^\\\\s#]*)?(?:#[^\\\\\\\\\\\\s]*)?$/i,
+    email: /^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i
+  });
+  exports2.formatNames = Object.keys(exports2.fullFormats);
+  function isLeapYear(year) {
+    return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+  }
+  var DATE = /^(\\\\d\\\\d\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d)$/;
+  var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  function date(str) {
+    const matches = DATE.exec(str);
+    if (!matches)
+      return false;
+    const year = +matches[1];
+    const month = +matches[2];
+    const day = +matches[3];
+    return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
+  }
+  function compareDate(d1, d2) {
+    if (!(d1 && d2))
+      return void 0;
+    if (d1 > d2)
+      return 1;
+    if (d1 < d2)
+      return -1;
+    return 0;
+  }
+  var TIME = /^(\\\\d\\\\d):(\\\\d\\\\d):(\\\\d\\\\d)(\\\\.\\\\d+)?(z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i;
+  function time(str, withTimeZone) {
+    const matches = TIME.exec(str);
+    if (!matches)
+      return false;
+    const hour = +matches[1];
+    const minute = +matches[2];
+    const second = +matches[3];
+    const timeZone = matches[5];
+    return (hour <= 23 && minute <= 59 && second <= 59 || hour === 23 && minute === 59 && second === 60) && (!withTimeZone || timeZone !== \\"\\");
+  }
+  function compareTime(t1, t2) {
+    if (!(t1 && t2))
+      return void 0;
+    const a1 = TIME.exec(t1);
+    const a2 = TIME.exec(t2);
+    if (!(a1 && a2))
+      return void 0;
+    t1 = a1[1] + a1[2] + a1[3] + (a1[4] || \\"\\");
+    t2 = a2[1] + a2[2] + a2[3] + (a2[4] || \\"\\");
+    if (t1 > t2)
+      return 1;
+    if (t1 < t2)
+      return -1;
+    return 0;
+  }
+  var DATE_TIME_SEPARATOR = /t|\\\\s/i;
+  function date_time(str) {
+    const dateTime = str.split(DATE_TIME_SEPARATOR);
+    return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1], true);
+  }
+  function compareDateTime(dt1, dt2) {
+    if (!(dt1 && dt2))
+      return void 0;
+    const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
+    const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
+    const res = compareDate(d1, d2);
+    if (res === void 0)
+      return void 0;
+    return res || compareTime(t1, t2);
+  }
+  var NOT_URI_FRAGMENT = /\\\\/|:/;
+  var URI = /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\\\\?(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
+  function uri(str) {
+    return NOT_URI_FRAGMENT.test(str) && URI.test(str);
+  }
+  var Z_ANCHOR = /[^\\\\\\\\]\\\\\\\\Z/;
+  function regex(str) {
+    if (Z_ANCHOR.test(str))
+      return false;
+    try {
+      new RegExp(str);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+});
+
+// src/src/index.ts
 __markAsModule(exports);
 __export(exports, {
   Codecs: () => Codecs,
@@ -377,7 +500,7 @@ var ValidationError = class extends Error {
   }
   constructor(schemaName, value, validatorErrors) {
     const errorStrings = validatorErrors.map((err) => {
-      return \`  \${err.message} at \${err.dataPath || \\"#\\"}, got \${valueToShapeString(err.data)}\`;
+      return \`  \${err.message} at \${err.instancePath || \\"#\\"}, got \${valueToShapeString(err.data)}\`;
     });
     super(\`Validation for the schema \${JSON.stringify(schemaName)} failed with the following errors:
 \${errorStrings.join(\\"\\\\n\\")}\`);
@@ -394,9 +517,9 @@ function valueToShapeReplacer(_key, value) {
 
 // embedded:src/codec.ts
 var CodecImpl = class {
-  constructor(name, uri2, validateFn) {
+  constructor(name, uri, validateFn) {
     this.name = name;
-    this.uri = uri2;
+    this.uri = uri;
     this.validateFn = validateFn;
   }
   identity(obj) {
@@ -413,132 +536,19 @@ var CodecImpl = class {
   }
 };
 
-// node_modules/ajv-formats/src/formats.ts
-function fmtDef(validate, compare) {
-  return {validate, compare};
-}
-var fullFormats = {
-  date: fmtDef(date, compareDate),
-  time: fmtDef(time, compareTime),
-  \\"date-time\\": fmtDef(date_time, compareDateTime),
-  duration: /^P(?!$)((\\\\d+Y)?(\\\\d+M)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?|(\\\\d+W)?)$/,
-  uri,
-  \\"uri-reference\\": /^(?:[a-z][a-z0-9+\\\\-.]*:)?(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\\\\?(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i,
-  \\"uri-template\\": /^(?:(?:[^\\\\x00-\\\\x20\\"'<>%\\\\\\\\^\`{|}]|%[0-9a-f]{2})|\\\\{[+#./;?&=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?)*\\\\})*$/i,
-  url: /^(?:https?|ftp):\\\\/\\\\/(?:\\\\S+(?::\\\\S*)?@)?(?:(?!(?:10|127)(?:\\\\.\\\\d{1,3}){3})(?!(?:169\\\\.254|192\\\\.168)(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)(?:\\\\.(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)*(?:\\\\.(?:[a-z\\\\u{00a1}-\\\\u{ffff}]{2,})))(?::\\\\d{2,5})?(?:\\\\/[^\\\\s]*)?$/iu,
-  email: /^[a-z0-9!#$%&'*+/=?^_\`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i,
-  hostname: /^(?=.{1,253}\\\\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\\\\.?$/i,
-  ipv4: /^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$/,
-  ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:)))$/i,
-  regex,
-  uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
-  \\"json-pointer\\": /^(?:\\\\/(?:[^~/]|~0|~1)*)*$/,
-  \\"json-pointer-uri-fragment\\": /^#(?:\\\\/(?:[a-z0-9_\\\\-.!$&'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i,
-  \\"relative-json-pointer\\": /^(?:0|[1-9][0-9]*)(?:#|(?:\\\\/(?:[^~/]|~0|~1)*)*)$/
-};
-var fastFormats = __assign(__assign({}, fullFormats), {
-  date: fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d$/, compareDate),
-  time: fmtDef(/^(?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i, compareTime),
-  \\"date-time\\": fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d[t\\\\s](?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)$/i, compareDateTime),
-  uri: /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/)?[^\\\\s]*$/i,
-  \\"uri-reference\\": /^(?:(?:[a-z][a-z0-9+\\\\-.]*:)?\\\\/?\\\\/)?(?:[^\\\\\\\\\\\\s#][^\\\\s#]*)?(?:#[^\\\\\\\\\\\\s]*)?$/i,
-  email: /^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i
-});
-var formatNames = Object.keys(fullFormats);
-function isLeapYear(year) {
-  return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-}
-var DATE = /^(\\\\d\\\\d\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d)$/;
-var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-function date(str) {
-  const matches = DATE.exec(str);
-  if (!matches)
-    return false;
-  const year = +matches[1];
-  const month = +matches[2];
-  const day = +matches[3];
-  return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
-}
-function compareDate(d1, d2) {
-  if (!(d1 && d2))
-    return void 0;
-  if (d1 > d2)
-    return 1;
-  if (d1 < d2)
-    return -1;
-  return 0;
-}
-var TIME = /^(\\\\d\\\\d):(\\\\d\\\\d):(\\\\d\\\\d)(\\\\.\\\\d+)?(z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i;
-function time(str, withTimeZone) {
-  const matches = TIME.exec(str);
-  if (!matches)
-    return false;
-  const hour = +matches[1];
-  const minute = +matches[2];
-  const second = +matches[3];
-  const timeZone = matches[5];
-  return (hour <= 23 && minute <= 59 && second <= 59 || hour === 23 && minute === 59 && second === 60) && (!withTimeZone || timeZone !== \\"\\");
-}
-function compareTime(t1, t2) {
-  if (!(t1 && t2))
-    return void 0;
-  const a1 = TIME.exec(t1);
-  const a2 = TIME.exec(t2);
-  if (!(a1 && a2))
-    return void 0;
-  t1 = a1[1] + a1[2] + a1[3] + (a1[4] || \\"\\");
-  t2 = a2[1] + a2[2] + a2[3] + (a2[4] || \\"\\");
-  if (t1 > t2)
-    return 1;
-  if (t1 < t2)
-    return -1;
-  return 0;
-}
-var DATE_TIME_SEPARATOR = /t|\\\\s/i;
-function date_time(str) {
-  const dateTime = str.split(DATE_TIME_SEPARATOR);
-  return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1], true);
-}
-function compareDateTime(dt1, dt2) {
-  if (!(dt1 && dt2))
-    return void 0;
-  const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
-  const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
-  const res = compareDate(d1, d2);
-  if (res === void 0)
-    return void 0;
-  return res || compareTime(t1, t2);
-}
-var NOT_URI_FRAGMENT = /\\\\/|:/;
-var URI = /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\\\\?(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
-function uri(str) {
-  return NOT_URI_FRAGMENT.test(str) && URI.test(str);
-}
-var Z_ANCHOR = /[^\\\\\\\\]\\\\\\\\Z/;
-function regex(str) {
-  if (Z_ANCHOR.test(str))
-    return false;
-  try {
-    new RegExp(str);
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-
-// src/index.ts
-var __validate_Bookmark = validate21;
+// src/src/index.ts
+exports.__validate_Bookmark = validate21;
 var schema6 = {$id: \\"file:///Bookmark.json\\", title: \\"A Bookmark\\", type: \\"object\\", properties: {url: {type: \\"string\\", format: \\"uri\\"}, name: {type: \\"string\\"}, added_at: {type: \\"string\\", format: \\"date-time\\"}}, required: [\\"url\\", \\"name\\", \\"added_at\\"]};
-var formats0 = fullFormats.uri;
-var formats2 = fullFormats[\\"date-time\\"];
-function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
+var formats0 = require_formats().fullFormats.uri;
+var formats2 = require_formats().fullFormats[\\"date-time\\"];
+function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
   ;
   let vErrors = null;
   let errors = 0;
   const _errs0 = errors;
   if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
     if (data.url === void 0) {
-      const err0 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"url\\"}, message: \\"should have required property 'url'\\", schema: schema6.required, parentSchema: schema6, data};
+      const err0 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"url\\"}, message: \\"must have required property 'url'\\", schema: schema6.required, parentSchema: schema6, data};
       if (vErrors === null) {
         vErrors = [err0];
       } else {
@@ -547,7 +557,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.name === void 0) {
-      const err1 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"name\\"}, message: \\"should have required property 'name'\\", schema: schema6.required, parentSchema: schema6, data};
+      const err1 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"name\\"}, message: \\"must have required property 'name'\\", schema: schema6.required, parentSchema: schema6, data};
       if (vErrors === null) {
         vErrors = [err1];
       } else {
@@ -556,7 +566,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       errors++;
     }
     if (data.added_at === void 0) {
-      const err2 = {keyword: \\"required\\", dataPath, schemaPath: \\"#/required\\", params: {missingProperty: \\"added_at\\"}, message: \\"should have required property 'added_at'\\", schema: schema6.required, parentSchema: schema6, data};
+      const err2 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"added_at\\"}, message: \\"must have required property 'added_at'\\", schema: schema6.required, parentSchema: schema6, data};
       if (vErrors === null) {
         vErrors = [err2];
       } else {
@@ -572,7 +582,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       }
       if (typeof data0 === \\"string\\") {
         if (!formats0(data0)) {
-          const err3 = {keyword: \\"format\\", dataPath: dataPath + \\"/url\\", schemaPath: \\"#/properties/url/format\\", params: {format: \\"uri\\"}, message: 'should match format \\"uri\\"', schema: \\"uri\\", parentSchema: schema6.properties.url, data: data0};
+          const err3 = {instancePath: instancePath + \\"/url\\", schemaPath: \\"#/properties/url/format\\", keyword: \\"format\\", params: {format: \\"uri\\"}, message: 'must match format \\"uri\\"', schema: \\"uri\\", parentSchema: schema6.properties.url, data: data0};
           if (vErrors === null) {
             vErrors = [err3];
           } else {
@@ -581,7 +591,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
           errors++;
         }
       } else {
-        const err4 = {keyword: \\"type\\", dataPath: dataPath + \\"/url\\", schemaPath: \\"#/properties/url/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema6.properties.url.type, parentSchema: schema6.properties.url, data: data0};
+        const err4 = {instancePath: instancePath + \\"/url\\", schemaPath: \\"#/properties/url/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.url.type, parentSchema: schema6.properties.url, data: data0};
         if (vErrors === null) {
           vErrors = [err4];
         } else {
@@ -595,7 +605,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       let data1 = data.name;
       const _errs3 = errors;
       if (typeof data1 !== \\"string\\") {
-        const err5 = {keyword: \\"type\\", dataPath: dataPath + \\"/name\\", schemaPath: \\"#/properties/name/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema6.properties.name.type, parentSchema: schema6.properties.name, data: data1};
+        const err5 = {instancePath: instancePath + \\"/name\\", schemaPath: \\"#/properties/name/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.name.type, parentSchema: schema6.properties.name, data: data1};
         if (vErrors === null) {
           vErrors = [err5];
         } else {
@@ -614,7 +624,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       }
       if (typeof data2 === \\"string\\") {
         if (!formats2.validate(data2)) {
-          const err6 = {keyword: \\"format\\", dataPath: dataPath + \\"/added_at\\", schemaPath: \\"#/properties/added_at/format\\", params: {format: \\"date-time\\"}, message: 'should match format \\"date-time\\"', schema: \\"date-time\\", parentSchema: schema6.properties.added_at, data: data2};
+          const err6 = {instancePath: instancePath + \\"/added_at\\", schemaPath: \\"#/properties/added_at/format\\", keyword: \\"format\\", params: {format: \\"date-time\\"}, message: 'must match format \\"date-time\\"', schema: \\"date-time\\", parentSchema: schema6.properties.added_at, data: data2};
           if (vErrors === null) {
             vErrors = [err6];
           } else {
@@ -623,7 +633,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
           errors++;
         }
       } else {
-        const err7 = {keyword: \\"type\\", dataPath: dataPath + \\"/added_at\\", schemaPath: \\"#/properties/added_at/type\\", params: {type: \\"string\\"}, message: \\"should be string\\", schema: schema6.properties.added_at.type, parentSchema: schema6.properties.added_at, data: data2};
+        const err7 = {instancePath: instancePath + \\"/added_at\\", schemaPath: \\"#/properties/added_at/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.added_at.type, parentSchema: schema6.properties.added_at, data: data2};
         if (vErrors === null) {
           vErrors = [err7];
         } else {
@@ -634,7 +644,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
       var valid0 = _errs5 === errors;
     }
   } else {
-    const err8 = {keyword: \\"type\\", dataPath, schemaPath: \\"#/type\\", params: {type: \\"object\\"}, message: \\"should be object\\", schema: schema6.type, parentSchema: schema6, data};
+    const err8 = {instancePath, schemaPath: \\"#/type\\", keyword: \\"type\\", params: {type: \\"object\\"}, message: \\"must be object\\", schema: schema6.type, parentSchema: schema6, data};
     if (vErrors === null) {
       vErrors = [err8];
     } else {
@@ -646,7 +656,7 @@ function validate21(data, {dataPath = \\"\\", parentData, parentDataProperty, ro
   return errors === 0;
 }
 var Codecs = {
-  Bookmark: new CodecImpl(\\"Bookmark\\", \\"file:///Bookmark.json\\", __validate_Bookmark)
+  Bookmark: new CodecImpl(\\"Bookmark\\", \\"file:///Bookmark.json\\", exports.__validate_Bookmark)
 };
 "
 `;
@@ -681,25 +691,29 @@ export interface Codec<T> {
 
 export interface ErrorObject {
   keyword: string;
-  dataPath: string;
+  instancePath: string;
   schemaPath: string;
   params: { [key: string]: unknown };
   propertyName?: string;
-  message: string;
-  schema: unknown;
+  message?: string;
+  schema?: unknown;
   data: unknown;
 }
 
-export interface ValidationErrorStatic {
+{
+  // The following is designed to catch type compatibility issues between our local
+  // ErrorObject definition and the canonical definition in ajv. This code block
+  // is designed to be compiled out, and if not, be a no-op.
+  ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
 }
 
 export declare class ValidationError extends Error {
   static isValidationError(err: unknown): err is ValidationError;
-  
+
   readonly validatorErrors: ErrorObject[];
   readonly value: unknown;
 
-  constructor (schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
+  constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
 }
 
 export interface ValidateFunction<T = unknown> {

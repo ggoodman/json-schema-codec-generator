@@ -74,6 +74,11 @@ describe('Codec generation', () => {
                 type: 'string',
                 format: 'date-time',
               },
+              // To be re-enabled when OpenAPI formats land in ajv-formats
+              // picture: {
+              //   type: 'string',
+              //   format: 'byte',
+              // }
             },
             required: ['url', 'name', 'added_at'],
           },
@@ -130,7 +135,7 @@ describe('Codec generation', () => {
       })
     ).toThrowErrorMatchingInlineSnapshot(`
             "Validation for the schema \\"Bookmark\\" failed with the following errors:
-              should match format \\"uri\\" at /url, got \\"string\\""
+              must match format \\"uri\\" at /url, got \\"string\\""
           `);
   });
 
