@@ -1,8 +1,8 @@
 /// <reference types="jest" />
 
+import type { Codec, ErrorObject } from '@ggoodman/typed-validator';
 import Module from 'module';
-import { Codec, generateCodecCode } from '../src';
-import type { ErrorObject } from '../src/stub/types';
+import { generateCodecCode } from '../src';
 
 describe('Codec generation', () => {
   it('will produce the expected code', async () => {
@@ -186,6 +186,6 @@ describe('Codec generation', () => {
   });
 
   it('exports a ErrorObject type that is compatible with the ajv equivalent', () => {
-    ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
+    ((_t: ErrorObject) => {})({} as import('ajv').ErrorObject);
   });
 });

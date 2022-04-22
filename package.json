@@ -35,6 +35,7 @@
     "dist/**/!(tsconfig.tsbuildinfo)"
   ],
   "dependencies": {
+    "@ggoodman/typed-validator": "^0.2.0",
     "ajv": "^8.0.5",
     "ajv-formats": "^2.0.2",
     "esbuild-wasm": "^0.11.6",
@@ -83,5 +84,9 @@
     "arrowParens": "always",
     "printWidth": 100,
     "singleQuote": true
+  },
+  "volta": {
+    "node": "16.14.2",
+    "npm": "8.7.0"
   }
 }

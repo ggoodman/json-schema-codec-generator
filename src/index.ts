@@ -1,13 +1,9 @@
 import Ajv, { Options } from 'ajv';
-import addFormats, { FormatOptions } from 'ajv-formats';
+import addFormats, { type FormatOptions } from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone';
 import * as Esbuild from 'esbuild-wasm';
-import { JSONSchema, Parser } from 'json-schema-to-dts';
+import { type JSONSchema, Parser } from 'json-schema-to-dts';
 import { staticFiles } from './generated/embedded';
-
-export { CodecImpl } from './stub/codec';
-export type { Codec } from './stub/types';
-export { ValidationError } from './stub/validator';
 
 export interface SchemaEntry {
   uri: string;
@@ -15,7 +11,7 @@ export interface SchemaEntry {
   preferredName?: string;
 }
 
-type AnyType = "any" | "JSONValue" | "unknown";
+type AnyType = 'any' | 'JSONValue' | 'unknown';
 export interface GenerateCodecCodeOptions {
   anyType?: AnyType;
   ajvOptions?: Omit<Options, 'allErrors' | 'code' | 'inlineRefs'>;
@@ -76,7 +72,7 @@ export async function generateCodecCode(
 
     codecDefinitions.push(`${name}: Codec<Types.${name}>`);
     codecInstances.push(
-      `${name}: new CodecImpl<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
+      `${name}: createCodec<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
         uri
       )}, exports.${validatorNameForCodec(name)}) as Codec<Types.${name}>`
     );
@@ -107,50 +103,10 @@ export async function generateCodecCode(
     format: moduleFormat,
     outfile: 'codecs.js',
     platform: 'neutral',
-    plugins: [
-      {
-        name: 'resolve',
-        setup(build) {
-
-          const resolveMap: Record<string, { namespace: string; path: string }> = {
-            './codec': {
-              namespace: 'embedded',
-              path: 'src/codec.ts',
-            },
-            './validator': {
-              namespace: 'embedded',
-              path: 'src/validator.ts',
-            },
-          };
-
-          build.onResolve({ filter: /.*/ }, async ({ importer, kind, path, resolveDir }) => {
-            // console.log('onResolve[mapped](%O)', { importer, kind, path, resolveDir });
-            const mapped = resolveMap[path];
-
-            if (mapped) {
-              return mapped;
-            }
-
-            return undefined;
-          });
-
-          build.onLoad({ filter: /.*/, namespace: 'embedded' }, ({ namespace, path }) => {
-            const contents = staticFiles[path];
-
-            if (contents) {
-              return {
-                contents,
-                loader: 'ts',
-              };
-            }
-          });
-        },
-      },
-    ],
     stdin: {
       contents: `
-import { CodecImpl } from './codec';
-export * from './validator';
+import { createCodec } from '@ggoodman/typed-validator';
+export * from '@ggoodman/typed-validator';
 
 ${standaloneValidationCode}
 
