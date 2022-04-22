@@ -2,8 +2,9 @@ import Ajv, { Options } from 'ajv';
 import addFormats, { type FormatOptions } from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone';
 import * as Esbuild from 'esbuild-wasm';
+import { readFile } from 'fs/promises';
 import { type JSONSchema, Parser } from 'json-schema-to-dts';
-import { staticFiles } from './generated/embedded';
+import { dirname, join, resolve } from 'path';
 
 export interface SchemaEntry {
   uri: string;
@@ -106,6 +107,7 @@ export async function generateCodecCode(
     stdin: {
       contents: `
 import { createCodec } from '@ggoodman/typed-validator';
+
 export * from '@ggoodman/typed-validator';
 
 ${standaloneValidationCode}
@@ -132,7 +134,7 @@ export const Codecs = {
 
   const javaScript = bundleResult.outputFiles[0].text;
   const typeDefinitions = `
-${staticFiles['src/types.ts']}
+${await readTypes('@ggoodman/typed-validator')};
 
 export namespace Types {
   ${schemaTypeDefs.split('\n').join('\n  ')}
@@ -152,4 +154,12 @@ export declare const Codecs: {
 
 function validatorNameForCodec(codecName: string) {
   return `__validate_${codecName}`;
+}
+
+function readTypes(moduleName: string) {
+  const packageJsonPath = require.resolve(join(moduleName, 'package.json'));
+  const packageJson = require(packageJsonPath);
+  const typesPath = resolve(dirname(packageJsonPath), packageJson['types']);
+
+  return readFile(typesPath, { encoding: 'utf-8' });
 }
