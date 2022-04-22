@@ -14,6 +14,9 @@
   "main": "dist/index.js",
   "module": "dist/index.esm.js",
   "types": "dist/index.d.ts",
+  "publishConfig": {
+    "access": "public"
+  },
   "bin": {
     "json-schema-codec-generator": "bin/json-schema-codec-generator"
   },
@@ -42,18 +45,18 @@
     "typescript": "^4.1.3"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "^18.0.0",
+    "@rollup/plugin-commonjs": "^21.1.0",
     "@rollup/plugin-json": "^4.1.0",
-    "@rollup/plugin-node-resolve": "^11.2.0",
-    "@types/jest": "^26.0.20",
-    "@types/node": "^10.17.51",
+    "@rollup/plugin-node-resolve": "^13.2.1",
+    "@types/jest": "^27.4.1",
+    "@types/node": "^14.18.13",
     "@types/resolve": "^1.20.0",
     "@wessberg/rollup-plugin-ts": "^1.3.10",
-    "gh-release": "^5.0.0",
-    "jest": "^26.5.0",
+    "gh-release": "^6.0.4",
+    "jest": "^27.5.1",
     "kacl": "^1.1.1",
     "rollup": "^2.41.4",
-    "ts-jest": "^26.5.4"
+    "ts-jest": "^27.1.4"
   },
   "scripts": {
     "build": "rm -rf dist && rollup -c rollup.config.js",
