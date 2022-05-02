@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- Added support for the `externalizeValidatorLibrary` option in `generateCodecCode`. When a value of `true` is supplied for this option, the dependency on `@ggoodman/typed-validator` will be treated as a runtime dependency.
 
 ## [0.6.1] - 2021-04-08
 ### Fixed

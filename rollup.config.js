@@ -61,7 +61,7 @@ const baseConfig = {
     RollupPluginTs({
       browserslist: ['node 12.16'],
       exclude: ['node_modules'],
-      transpiler: 'babel',
+      transpiler: 'typescript',
     }),
   ],
 };
@@ -111,7 +111,7 @@ configs.push({
     }),
     RollupPluginTs({
       exclude: ['node_modules'],
-      transpiler: 'babel',
+      transpiler: 'typescript',
     }),
   ],
 });
