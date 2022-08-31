@@ -12,10 +12,11 @@ var __export = (target, all) => {
 __markAsModule(exports);
 __export(exports, {
   Codecs: () => Codecs,
-  ValidationError: () => ValidationError
+  ValidationError: () => ValidationError,
+  createCodec: () => createCodec
 });
 
-// embedded:src/validator.ts
+// node_modules/@ggoodman/typed-validator/typed-validator.js
 var ValidationError = class extends Error {
   static isValidationError(err) {
     return err instanceof this;
@@ -36,14 +37,7 @@ function valueToShapeString(value) {
 function valueToShapeReplacer(_key, value) {
   return typeof value === \\"object\\" && value ? value : typeof value;
 }
-
-// embedded:src/codec.ts
-var CodecImpl = class {
-  constructor(name, uri, validateFn) {
-    this.name = name;
-    this.uri = uri;
-    this.validateFn = validateFn;
-  }
+var CodecImpl = class CodecImpl2 {
   identity(obj) {
     return obj;
   }
@@ -56,11 +50,19 @@ var CodecImpl = class {
     }
     return obj;
   }
+  constructor(name, uri, validateFn) {
+    this.name = name;
+    this.uri = uri;
+    this.validateFn = validateFn;
+  }
 };
+function createCodec(name, uri, validateFn) {
+  return new CodecImpl(name, uri, validateFn);
+}
 
 // src/src/index.ts
 exports.__validate_User = validate21;
-var schema6 = {$id: \\"file:///User.json\\", title: \\"A User Object\\", description: \\"A user is a known visitor.\\", type: \\"object\\", properties: {id: {type: \\"string\\"}, name: {type: \\"string\\"}}, required: [\\"id\\", \\"name\\"]};
+var schema6 = {\\"$id\\": \\"file:///User.json\\", \\"title\\": \\"A User Object\\", \\"description\\": \\"A user is a known visitor.\\", \\"type\\": \\"object\\", \\"properties\\": {\\"id\\": {\\"type\\": \\"string\\"}, \\"name\\": {\\"type\\": \\"string\\"}}, \\"required\\": [\\"id\\", \\"name\\"]};
 function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
   ;
   let vErrors = null;
@@ -128,7 +130,7 @@ function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty
   return errors === 0;
 }
 exports.__validate_BlogPost = validate22;
-var schema7 = {$id: \\"file:///BlogPost.json\\", title: \\"A Blog Post\\", description: \\"A blog post represents an article associated with an author\\", type: \\"object\\", properties: {id: {type: \\"string\\"}, title: {type: \\"string\\"}, content: {type: \\"string\\"}, author: {$ref: \\"file:///User.json\\"}}, required: [\\"id\\", \\"title\\", \\"content\\", \\"user\\"]};
+var schema7 = {\\"$id\\": \\"file:///BlogPost.json\\", \\"title\\": \\"A Blog Post\\", \\"description\\": \\"A blog post represents an article associated with an author\\", \\"type\\": \\"object\\", \\"properties\\": {\\"id\\": {\\"type\\": \\"string\\"}, \\"title\\": {\\"type\\": \\"string\\"}, \\"content\\": {\\"type\\": \\"string\\"}, \\"author\\": {\\"$ref\\": \\"file:///User.json\\"}}, \\"required\\": [\\"id\\", \\"title\\", \\"content\\", \\"user\\"]};
 function validate22(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
   ;
   let vErrors = null;
@@ -239,8 +241,8 @@ function validate22(data, {instancePath = \\"\\", parentData, parentDataProperty
   return errors === 0;
 }
 var Codecs = {
-  User: new CodecImpl(\\"User\\", \\"file:///User.json\\", exports.__validate_User),
-  BlogPost: new CodecImpl(\\"BlogPost\\", \\"file:///BlogPost.json\\", exports.__validate_BlogPost)
+  User: createCodec(\\"User\\", \\"file:///User.json\\", exports.__validate_User),
+  BlogPost: createCodec(\\"BlogPost\\", \\"file:///BlogPost.json\\", exports.__validate_BlogPost)
 };
 "
 `;
@@ -254,58 +256,45 @@ Object {
 
 exports[`Codec generation will produce the expected code 3`] = `
 "
-export interface Codec<T> {
-  /**
-   * Identify function returning the given argument as a value matching the schema.
-   *
-   * This can be useful to use in non-TypeScript code to construct a valid object while
-   * benefitting from suggestions from a TypeScript language service.
-   */
-  identity(obj: T): T;
-
-  /**
-   * Check if a value matches the schema.
-   */
-  is(obj: unknown): obj is T;
-
-  /**
-   * Validate that a value matches the schema and throws if not.
-   */
-  validate(obj: unknown): T;
+interface ErrorObject {
+    instancePath: string;
+    message?: string;
+    data?: unknown;
+}
+declare class ValidationError extends Error {
+    static isValidationError(err: unknown): err is ValidationError;
+    readonly validatorErrors: ErrorObject[];
+    readonly value: unknown;
+    constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
 }
 
-export interface ErrorObject {
-  keyword: string;
-  instancePath: string;
-  schemaPath: string;
-  params: { [key: string]: unknown };
-  propertyName?: string;
-  message?: string;
-  schema?: unknown;
-  data: unknown;
+interface Codec<T> {
+    /**
+     * Identify function returning the given argument as a value matching the schema.
+     *
+     * This can be useful to use in non-TypeScript code to construct a valid object while
+     * benefitting from suggestions from a TypeScript language service.
+     */
+    identity(obj: T): T;
+    /**
+     * Check if a value matches the schema.
+     */
+    is(obj: unknown): obj is T;
+    /**
+     * Validate that a value matches the schema and throws if not.
+     */
+    validate(obj: unknown): T;
+}
+interface ValidateFunction<T = unknown> {
+    (data: unknown): data is T;
+    errors?: ErrorObject[];
 }
 
-{
-  // The following is designed to catch type compatibility issues between our local
-  // ErrorObject definition and the canonical definition in ajv. This code block
-  // is designed to be compiled out, and if not, be a no-op.
-  ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
-}
+declare function createCodec<T>(name: string, uri: string, validateFn: ValidateFunction<T>): Codec<T>;
 
-export declare class ValidationError extends Error {
-  static isValidationError(err: unknown): err is ValidationError;
-
-  readonly validatorErrors: ErrorObject[];
-  readonly value: unknown;
-
-  constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
-}
-
-export interface ValidateFunction<T = unknown> {
-  (data: unknown): data is T;
-  errors?: ErrorObject[];
-}
-
+export { Codec, ErrorObject, ValidateFunction, ValidationError, createCodec };
+//# sourceMappingURL=typed-validator.d.ts.map
+;
 
 export namespace Types {
   type JSONPrimitive = boolean | null | number | string;
@@ -346,11 +335,13 @@ export declare const Codecs: {
 
 exports[`Codec generation will validate a well-known format from ajv-formats 1`] = `
 "var __defProp = Object.defineProperty;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
+var __defProps = Object.defineProperties;
+var __getOwnPropDescs = Object.getOwnPropertyDescriptors;
 var __getOwnPropSymbols = Object.getOwnPropertySymbols;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __propIsEnum = Object.prototype.propertyIsEnumerable;
 var __defNormalProp = (obj, key, value) => key in obj ? __defProp(obj, key, {enumerable: true, configurable: true, writable: true, value}) : obj[key] = value;
-var __objSpread = (a, b) => {
+var __spreadValues = (a, b) => {
   for (var prop in b || (b = {}))
     if (__hasOwnProp.call(b, prop))
       __defNormalProp(a, prop, b[prop]);
@@ -361,127 +352,155 @@ var __objSpread = (a, b) => {
     }
   return a;
 };
+var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
 var __markAsModule = (target) => __defProp(target, \\"__esModule\\", {value: true});
-var __commonJS = (cb, mod) => () => (mod || cb((mod = {exports: {}}).exports, mod), mod.exports);
+var __commonJS = (cb, mod) => function __require() {
+  return mod || (0, cb[Object.keys(cb)[0]])((mod = {exports: {}}).exports, mod), mod.exports;
+};
 var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, {get: all[name], enumerable: true});
 };
 
 // node_modules/ajv-formats/dist/formats.js
-var require_formats = __commonJS((exports2) => {
-  \\"use strict\\";
-  Object.defineProperty(exports2, \\"__esModule\\", {value: true});
-  exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
-  function fmtDef(validate, compare) {
-    return {validate, compare};
-  }
-  exports2.fullFormats = {
-    date: fmtDef(date, compareDate),
-    time: fmtDef(time, compareTime),
-    \\"date-time\\": fmtDef(date_time, compareDateTime),
-    duration: /^P(?!$)((\\\\d+Y)?(\\\\d+M)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?|(\\\\d+W)?)$/,
-    uri,
-    \\"uri-reference\\": /^(?:[a-z][a-z0-9+\\\\-.]*:)?(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\\\\?(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i,
-    \\"uri-template\\": /^(?:(?:[^\\\\x00-\\\\x20\\"'<>%\\\\\\\\^\`{|}]|%[0-9a-f]{2})|\\\\{[+#./;?&=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?)*\\\\})*$/i,
-    url: /^(?:https?|ftp):\\\\/\\\\/(?:\\\\S+(?::\\\\S*)?@)?(?:(?!(?:10|127)(?:\\\\.\\\\d{1,3}){3})(?!(?:169\\\\.254|192\\\\.168)(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)(?:\\\\.(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)*(?:\\\\.(?:[a-z\\\\u{00a1}-\\\\u{ffff}]{2,})))(?::\\\\d{2,5})?(?:\\\\/[^\\\\s]*)?$/iu,
-    email: /^[a-z0-9!#$%&'*+/=?^_\`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i,
-    hostname: /^(?=.{1,253}\\\\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\\\\.?$/i,
-    ipv4: /^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$/,
-    ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:)))$/i,
-    regex,
-    uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
-    \\"json-pointer\\": /^(?:\\\\/(?:[^~/]|~0|~1)*)*$/,
-    \\"json-pointer-uri-fragment\\": /^#(?:\\\\/(?:[a-z0-9_\\\\-.!$&'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i,
-    \\"relative-json-pointer\\": /^(?:0|[1-9][0-9]*)(?:#|(?:\\\\/(?:[^~/]|~0|~1)*)*)$/
-  };
-  exports2.fastFormats = __objSpread(__objSpread({}, exports2.fullFormats), {
-    date: fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d$/, compareDate),
-    time: fmtDef(/^(?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i, compareTime),
-    \\"date-time\\": fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d[t\\\\s](?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)$/i, compareDateTime),
-    uri: /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/)?[^\\\\s]*$/i,
-    \\"uri-reference\\": /^(?:(?:[a-z][a-z0-9+\\\\-.]*:)?\\\\/?\\\\/)?(?:[^\\\\\\\\\\\\s#][^\\\\s#]*)?(?:#[^\\\\\\\\\\\\s]*)?$/i,
-    email: /^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i
-  });
-  exports2.formatNames = Object.keys(exports2.fullFormats);
-  function isLeapYear(year) {
-    return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
-  }
-  var DATE = /^(\\\\d\\\\d\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d)$/;
-  var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-  function date(str) {
-    const matches = DATE.exec(str);
-    if (!matches)
-      return false;
-    const year = +matches[1];
-    const month = +matches[2];
-    const day = +matches[3];
-    return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
-  }
-  function compareDate(d1, d2) {
-    if (!(d1 && d2))
-      return void 0;
-    if (d1 > d2)
-      return 1;
-    if (d1 < d2)
-      return -1;
-    return 0;
-  }
-  var TIME = /^(\\\\d\\\\d):(\\\\d\\\\d):(\\\\d\\\\d)(\\\\.\\\\d+)?(z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i;
-  function time(str, withTimeZone) {
-    const matches = TIME.exec(str);
-    if (!matches)
-      return false;
-    const hour = +matches[1];
-    const minute = +matches[2];
-    const second = +matches[3];
-    const timeZone = matches[5];
-    return (hour <= 23 && minute <= 59 && second <= 59 || hour === 23 && minute === 59 && second === 60) && (!withTimeZone || timeZone !== \\"\\");
-  }
-  function compareTime(t1, t2) {
-    if (!(t1 && t2))
-      return void 0;
-    const a1 = TIME.exec(t1);
-    const a2 = TIME.exec(t2);
-    if (!(a1 && a2))
-      return void 0;
-    t1 = a1[1] + a1[2] + a1[3] + (a1[4] || \\"\\");
-    t2 = a2[1] + a2[2] + a2[3] + (a2[4] || \\"\\");
-    if (t1 > t2)
-      return 1;
-    if (t1 < t2)
-      return -1;
-    return 0;
-  }
-  var DATE_TIME_SEPARATOR = /t|\\\\s/i;
-  function date_time(str) {
-    const dateTime = str.split(DATE_TIME_SEPARATOR);
-    return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1], true);
-  }
-  function compareDateTime(dt1, dt2) {
-    if (!(dt1 && dt2))
-      return void 0;
-    const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
-    const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
-    const res = compareDate(d1, d2);
-    if (res === void 0)
-      return void 0;
-    return res || compareTime(t1, t2);
-  }
-  var NOT_URI_FRAGMENT = /\\\\/|:/;
-  var URI = /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\\\\?(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
-  function uri(str) {
-    return NOT_URI_FRAGMENT.test(str) && URI.test(str);
-  }
-  var Z_ANCHOR = /[^\\\\\\\\]\\\\\\\\Z/;
-  function regex(str) {
-    if (Z_ANCHOR.test(str))
-      return false;
-    try {
-      new RegExp(str);
+var require_formats = __commonJS({
+  \\"node_modules/ajv-formats/dist/formats.js\\"(exports2) {
+    \\"use strict\\";
+    Object.defineProperty(exports2, \\"__esModule\\", {value: true});
+    exports2.formatNames = exports2.fastFormats = exports2.fullFormats = void 0;
+    function fmtDef(validate, compare) {
+      return {validate, compare};
+    }
+    exports2.fullFormats = {
+      date: fmtDef(date, compareDate),
+      time: fmtDef(time, compareTime),
+      \\"date-time\\": fmtDef(date_time, compareDateTime),
+      duration: /^P(?!$)((\\\\d+Y)?(\\\\d+M)?(\\\\d+D)?(T(?=\\\\d)(\\\\d+H)?(\\\\d+M)?(\\\\d+S)?)?|(\\\\d+W)?)$/,
+      uri,
+      \\"uri-reference\\": /^(?:[a-z][a-z0-9+\\\\-.]*:)?(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@]|%[0-9a-f]{2})*)*)?(?:\\\\?(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'\\"()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i,
+      \\"uri-template\\": /^(?:(?:[^\\\\x00-\\\\x20\\"'<>%\\\\\\\\^\`{|}]|%[0-9a-f]{2})|\\\\{[+#./;?&=,!@|]?(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?(?:,(?:[a-z0-9_]|%[0-9a-f]{2})+(?::[1-9][0-9]{0,3}|\\\\*)?)*\\\\})*$/i,
+      url: /^(?:https?|ftp):\\\\/\\\\/(?:\\\\S+(?::\\\\S*)?@)?(?:(?!(?:10|127)(?:\\\\.\\\\d{1,3}){3})(?!(?:169\\\\.254|192\\\\.168)(?:\\\\.\\\\d{1,3}){2})(?!172\\\\.(?:1[6-9]|2\\\\d|3[0-1])(?:\\\\.\\\\d{1,3}){2})(?:[1-9]\\\\d?|1\\\\d\\\\d|2[01]\\\\d|22[0-3])(?:\\\\.(?:1?\\\\d{1,2}|2[0-4]\\\\d|25[0-5])){2}(?:\\\\.(?:[1-9]\\\\d?|1\\\\d\\\\d|2[0-4]\\\\d|25[0-4]))|(?:(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)(?:\\\\.(?:[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+-)*[a-z0-9\\\\u{00a1}-\\\\u{ffff}]+)*(?:\\\\.(?:[a-z\\\\u{00a1}-\\\\u{ffff}]{2,})))(?::\\\\d{2,5})?(?:\\\\/[^\\\\s]*)?$/iu,
+      email: /^[a-z0-9!#$%&'*+/=?^_\`{|}~-]+(?:\\\\.[a-z0-9!#$%&'*+/=?^_\`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/i,
+      hostname: /^(?=.{1,253}\\\\.?$)[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[-0-9a-z]{0,61}[0-9a-z])?)*\\\\.?$/i,
+      ipv4: /^(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)$/,
+      ipv6: /^((([0-9a-f]{1,4}:){7}([0-9a-f]{1,4}|:))|(([0-9a-f]{1,4}:){6}(:[0-9a-f]{1,4}|((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){5}(((:[0-9a-f]{1,4}){1,2})|:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3})|:))|(([0-9a-f]{1,4}:){4}(((:[0-9a-f]{1,4}){1,3})|((:[0-9a-f]{1,4})?:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){3}(((:[0-9a-f]{1,4}){1,4})|((:[0-9a-f]{1,4}){0,2}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){2}(((:[0-9a-f]{1,4}){1,5})|((:[0-9a-f]{1,4}){0,3}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(([0-9a-f]{1,4}:){1}(((:[0-9a-f]{1,4}){1,6})|((:[0-9a-f]{1,4}){0,4}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:))|(:(((:[0-9a-f]{1,4}){1,7})|((:[0-9a-f]{1,4}){0,5}:((25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)(\\\\.(25[0-5]|2[0-4]\\\\d|1\\\\d\\\\d|[1-9]?\\\\d)){3}))|:)))$/i,
+      regex,
+      uuid: /^(?:urn:uuid:)?[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
+      \\"json-pointer\\": /^(?:\\\\/(?:[^~/]|~0|~1)*)*$/,
+      \\"json-pointer-uri-fragment\\": /^#(?:\\\\/(?:[a-z0-9_\\\\-.!$&'()*+,;:=@]|%[0-9a-f]{2}|~0|~1)*)*$/i,
+      \\"relative-json-pointer\\": /^(?:0|[1-9][0-9]*)(?:#|(?:\\\\/(?:[^~/]|~0|~1)*)*)$/,
+      byte,
+      int32: {type: \\"number\\", validate: validateInt32},
+      int64: {type: \\"number\\", validate: validateInt64},
+      float: {type: \\"number\\", validate: validateNumber},
+      double: {type: \\"number\\", validate: validateNumber},
+      password: true,
+      binary: true
+    };
+    exports2.fastFormats = __spreadProps(__spreadValues({}, exports2.fullFormats), {
+      date: fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d$/, compareDate),
+      time: fmtDef(/^(?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i, compareTime),
+      \\"date-time\\": fmtDef(/^\\\\d\\\\d\\\\d\\\\d-[0-1]\\\\d-[0-3]\\\\d[t\\\\s](?:[0-2]\\\\d:[0-5]\\\\d:[0-5]\\\\d|23:59:60)(?:\\\\.\\\\d+)?(?:z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)$/i, compareDateTime),
+      uri: /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/)?[^\\\\s]*$/i,
+      \\"uri-reference\\": /^(?:(?:[a-z][a-z0-9+\\\\-.]*:)?\\\\/?\\\\/)?(?:[^\\\\\\\\\\\\s#][^\\\\s#]*)?(?:#[^\\\\\\\\\\\\s]*)?$/i,
+      email: /^[a-z0-9.!#$%&'*+/=?^_\`{|}~-]+@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\\\\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)*$/i
+    });
+    exports2.formatNames = Object.keys(exports2.fullFormats);
+    function isLeapYear(year) {
+      return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    }
+    var DATE = /^(\\\\d\\\\d\\\\d\\\\d)-(\\\\d\\\\d)-(\\\\d\\\\d)$/;
+    var DAYS = [0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    function date(str) {
+      const matches = DATE.exec(str);
+      if (!matches)
+        return false;
+      const year = +matches[1];
+      const month = +matches[2];
+      const day = +matches[3];
+      return month >= 1 && month <= 12 && day >= 1 && day <= (month === 2 && isLeapYear(year) ? 29 : DAYS[month]);
+    }
+    function compareDate(d1, d2) {
+      if (!(d1 && d2))
+        return void 0;
+      if (d1 > d2)
+        return 1;
+      if (d1 < d2)
+        return -1;
+      return 0;
+    }
+    var TIME = /^(\\\\d\\\\d):(\\\\d\\\\d):(\\\\d\\\\d)(\\\\.\\\\d+)?(z|[+-]\\\\d\\\\d(?::?\\\\d\\\\d)?)?$/i;
+    function time(str, withTimeZone) {
+      const matches = TIME.exec(str);
+      if (!matches)
+        return false;
+      const hour = +matches[1];
+      const minute = +matches[2];
+      const second = +matches[3];
+      const timeZone = matches[5];
+      return (hour <= 23 && minute <= 59 && second <= 59 || hour === 23 && minute === 59 && second === 60) && (!withTimeZone || timeZone !== \\"\\");
+    }
+    function compareTime(t1, t2) {
+      if (!(t1 && t2))
+        return void 0;
+      const a1 = TIME.exec(t1);
+      const a2 = TIME.exec(t2);
+      if (!(a1 && a2))
+        return void 0;
+      t1 = a1[1] + a1[2] + a1[3] + (a1[4] || \\"\\");
+      t2 = a2[1] + a2[2] + a2[3] + (a2[4] || \\"\\");
+      if (t1 > t2)
+        return 1;
+      if (t1 < t2)
+        return -1;
+      return 0;
+    }
+    var DATE_TIME_SEPARATOR = /t|\\\\s/i;
+    function date_time(str) {
+      const dateTime = str.split(DATE_TIME_SEPARATOR);
+      return dateTime.length === 2 && date(dateTime[0]) && time(dateTime[1], true);
+    }
+    function compareDateTime(dt1, dt2) {
+      if (!(dt1 && dt2))
+        return void 0;
+      const [d1, t1] = dt1.split(DATE_TIME_SEPARATOR);
+      const [d2, t2] = dt2.split(DATE_TIME_SEPARATOR);
+      const res = compareDate(d1, d2);
+      if (res === void 0)
+        return void 0;
+      return res || compareTime(t1, t2);
+    }
+    var NOT_URI_FRAGMENT = /\\\\/|:/;
+    var URI = /^(?:[a-z][a-z0-9+\\\\-.]*:)(?:\\\\/?\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:]|%[0-9a-f]{2})*@)?(?:\\\\[(?:(?:(?:(?:[0-9a-f]{1,4}:){6}|::(?:[0-9a-f]{1,4}:){5}|(?:[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){4}|(?:(?:[0-9a-f]{1,4}:){0,1}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){3}|(?:(?:[0-9a-f]{1,4}:){0,2}[0-9a-f]{1,4})?::(?:[0-9a-f]{1,4}:){2}|(?:(?:[0-9a-f]{1,4}:){0,3}[0-9a-f]{1,4})?::[0-9a-f]{1,4}:|(?:(?:[0-9a-f]{1,4}:){0,4}[0-9a-f]{1,4})?::)(?:[0-9a-f]{1,4}:[0-9a-f]{1,4}|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?))|(?:(?:[0-9a-f]{1,4}:){0,5}[0-9a-f]{1,4})?::[0-9a-f]{1,4}|(?:(?:[0-9a-f]{1,4}:){0,6}[0-9a-f]{1,4})?::)|[Vv][0-9a-f]+\\\\.[a-z0-9\\\\-._~!$&'()*+,;=:]+)\\\\]|(?:(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)\\\\.){3}(?:25[0-5]|2[0-4]\\\\d|[01]?\\\\d\\\\d?)|(?:[a-z0-9\\\\-._~!$&'()*+,;=]|%[0-9a-f]{2})*)(?::\\\\d*)?(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*|\\\\/(?:(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)?|(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})+(?:\\\\/(?:[a-z0-9\\\\-._~!$&'()*+,;=:@]|%[0-9a-f]{2})*)*)(?:\\\\?(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?(?:#(?:[a-z0-9\\\\-._~!$&'()*+,;=:@/?]|%[0-9a-f]{2})*)?$/i;
+    function uri(str) {
+      return NOT_URI_FRAGMENT.test(str) && URI.test(str);
+    }
+    var BYTE = /^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/gm;
+    function byte(str) {
+      BYTE.lastIndex = 0;
+      return BYTE.test(str);
+    }
+    var MIN_INT32 = -(2 ** 31);
+    var MAX_INT32 = 2 ** 31 - 1;
+    function validateInt32(value) {
+      return Number.isInteger(value) && value <= MAX_INT32 && value >= MIN_INT32;
+    }
+    function validateInt64(value) {
+      return Number.isInteger(value);
+    }
+    function validateNumber() {
       return true;
-    } catch (e) {
-      return false;
+    }
+    var Z_ANCHOR = /[^\\\\\\\\]\\\\\\\\Z/;
+    function regex(str) {
+      if (Z_ANCHOR.test(str))
+        return false;
+      try {
+        new RegExp(str);
+        return true;
+      } catch (e) {
+        return false;
+      }
     }
   }
 });
@@ -490,10 +509,11 @@ var require_formats = __commonJS((exports2) => {
 __markAsModule(exports);
 __export(exports, {
   Codecs: () => Codecs,
-  ValidationError: () => ValidationError
+  ValidationError: () => ValidationError,
+  createCodec: () => createCodec
 });
 
-// embedded:src/validator.ts
+// node_modules/@ggoodman/typed-validator/typed-validator.js
 var ValidationError = class extends Error {
   static isValidationError(err) {
     return err instanceof this;
@@ -514,14 +534,7 @@ function valueToShapeString(value) {
 function valueToShapeReplacer(_key, value) {
   return typeof value === \\"object\\" && value ? value : typeof value;
 }
-
-// embedded:src/codec.ts
-var CodecImpl = class {
-  constructor(name, uri, validateFn) {
-    this.name = name;
-    this.uri = uri;
-    this.validateFn = validateFn;
-  }
+var CodecImpl = class CodecImpl2 {
   identity(obj) {
     return obj;
   }
@@ -534,11 +547,19 @@ var CodecImpl = class {
     }
     return obj;
   }
+  constructor(name, uri, validateFn) {
+    this.name = name;
+    this.uri = uri;
+    this.validateFn = validateFn;
+  }
 };
+function createCodec(name, uri, validateFn) {
+  return new CodecImpl(name, uri, validateFn);
+}
 
 // src/src/index.ts
 exports.__validate_Bookmark = validate21;
-var schema6 = {$id: \\"file:///Bookmark.json\\", title: \\"A Bookmark\\", type: \\"object\\", properties: {url: {type: \\"string\\", format: \\"uri\\"}, name: {type: \\"string\\"}, added_at: {type: \\"string\\", format: \\"date-time\\"}}, required: [\\"url\\", \\"name\\", \\"added_at\\"]};
+var schema6 = {\\"$id\\": \\"file:///Bookmark.json\\", \\"title\\": \\"A Bookmark\\", \\"type\\": \\"object\\", \\"properties\\": {\\"url\\": {\\"type\\": \\"string\\", \\"format\\": \\"uri\\"}, \\"name\\": {\\"type\\": \\"string\\"}, \\"added_at\\": {\\"type\\": \\"string\\", \\"format\\": \\"date-time\\"}}, \\"required\\": [\\"url\\", \\"name\\", \\"added_at\\"]};
 var formats0 = require_formats().fullFormats.uri;
 var formats2 = require_formats().fullFormats[\\"date-time\\"];
 function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
@@ -656,7 +677,7 @@ function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty
   return errors === 0;
 }
 var Codecs = {
-  Bookmark: new CodecImpl(\\"Bookmark\\", \\"file:///Bookmark.json\\", exports.__validate_Bookmark)
+  Bookmark: createCodec(\\"Bookmark\\", \\"file:///Bookmark.json\\", exports.__validate_Bookmark)
 };
 "
 `;
@@ -669,58 +690,45 @@ Object {
 
 exports[`Codec generation will validate a well-known format from ajv-formats 3`] = `
 "
-export interface Codec<T> {
-  /**
-   * Identify function returning the given argument as a value matching the schema.
-   *
-   * This can be useful to use in non-TypeScript code to construct a valid object while
-   * benefitting from suggestions from a TypeScript language service.
-   */
-  identity(obj: T): T;
-
-  /**
-   * Check if a value matches the schema.
-   */
-  is(obj: unknown): obj is T;
-
-  /**
-   * Validate that a value matches the schema and throws if not.
-   */
-  validate(obj: unknown): T;
+interface ErrorObject {
+    instancePath: string;
+    message?: string;
+    data?: unknown;
+}
+declare class ValidationError extends Error {
+    static isValidationError(err: unknown): err is ValidationError;
+    readonly validatorErrors: ErrorObject[];
+    readonly value: unknown;
+    constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
 }
 
-export interface ErrorObject {
-  keyword: string;
-  instancePath: string;
-  schemaPath: string;
-  params: { [key: string]: unknown };
-  propertyName?: string;
-  message?: string;
-  schema?: unknown;
-  data: unknown;
+interface Codec<T> {
+    /**
+     * Identify function returning the given argument as a value matching the schema.
+     *
+     * This can be useful to use in non-TypeScript code to construct a valid object while
+     * benefitting from suggestions from a TypeScript language service.
+     */
+    identity(obj: T): T;
+    /**
+     * Check if a value matches the schema.
+     */
+    is(obj: unknown): obj is T;
+    /**
+     * Validate that a value matches the schema and throws if not.
+     */
+    validate(obj: unknown): T;
+}
+interface ValidateFunction<T = unknown> {
+    (data: unknown): data is T;
+    errors?: ErrorObject[];
 }
 
-{
-  // The following is designed to catch type compatibility issues between our local
-  // ErrorObject definition and the canonical definition in ajv. This code block
-  // is designed to be compiled out, and if not, be a no-op.
-  ((_t: import('ajv').ErrorObject) => {})({} as ErrorObject);
-}
+declare function createCodec<T>(name: string, uri: string, validateFn: ValidateFunction<T>): Codec<T>;
 
-export declare class ValidationError extends Error {
-  static isValidationError(err: unknown): err is ValidationError;
-
-  readonly validatorErrors: ErrorObject[];
-  readonly value: unknown;
-
-  constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
-}
-
-export interface ValidateFunction<T = unknown> {
-  (data: unknown): data is T;
-  errors?: ErrorObject[];
-}
-
+export { Codec, ErrorObject, ValidateFunction, ValidationError, createCodec };
+//# sourceMappingURL=typed-validator.d.ts.map
+;
 
 export namespace Types {
   type JSONPrimitive = boolean | null | number | string;

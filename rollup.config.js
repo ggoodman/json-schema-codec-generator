@@ -5,12 +5,10 @@
 import RollupPluginCommonjs from '@rollup/plugin-commonjs';
 import RollupPluginJson from '@rollup/plugin-json';
 import RollupPluginNodeResolve from '@rollup/plugin-node-resolve';
-import RollupPluginTs from '@wessberg/rollup-plugin-ts';
-import * as Crypto from 'crypto';
-import { promises as Fs } from 'fs';
 import { builtinModules } from 'module';
 import * as Path from 'path';
 import * as Rollup from 'rollup';
+import RollupPluginTs from 'rollup-plugin-ts';
 import * as Package from './package.json';
 
 const SPEC_RX = /^(@[^/]+\/[^/@]+|[^./@][^/@]*)(.*)?$/;
@@ -42,71 +40,6 @@ function createIsExternal(packageJson) {
   };
 }
 
-/**
- *
- * @param {import('rollup').PluginContext} ctx
- */
-async function generateStubs(ctx) {
-  const embeddedSourceDir = Path.resolve(__dirname, './src/stub');
-  const embeddedFilesPath = Path.resolve(__dirname, './src/generated/embedded.ts');
-  const embeddedFilesHash = Crypto.createHash('md5')
-    .update(await Fs.readFile(embeddedFilesPath))
-    .digest('hex');
-  const embeddedBanner = `
-// ------------------------------------
-// WARNING: GENERATED CODE, DO NOT EDIT
-// ------------------------------------
-    `.trim();
-  const embeddedFiles = await readEmbeddedFiles(ctx, embeddedSourceDir);
-  const embeddedFilesCode = `${embeddedBanner}\n\nexport const staticFiles: Record<string, string | undefined> = {\n${embeddedFiles
-    .map(
-      ({ fileName, content }) =>
-        `  ${JSON.stringify(`src/${fileName}`)}: ${JSON.stringify(content)},`
-    )
-    .join('\n')}\n}\n`;
-  const newHash = Crypto.createHash('md5').update(embeddedFilesCode).digest('hex');
-
-  if (newHash !== embeddedFilesHash) {
-    await Fs.writeFile(embeddedFilesPath, embeddedFilesCode);
-
-    console.error(
-      `✅ Updated embedded files in: %s`,
-      Path.relative(process.cwd(), embeddedFilesPath)
-    );
-  } else {
-    console.error(
-      `🚫 Embedded files not modified in: %s`,
-      Path.relative(process.cwd(), embeddedFilesPath)
-    );
-  }
-}
-
-/**
- *
- * @param {import('rollup').PluginContext} ctx
- */
-async function readEmbeddedFiles(ctx, embeddedSourceDir) {
-  const embeddedFilesEntries = await Fs.readdir(embeddedSourceDir, {
-    encoding: 'utf-8',
-    withFileTypes: true,
-  });
-  const embeddedFilesPromises = embeddedFilesEntries
-    .filter((entry) => entry.isFile())
-    .map(async (entry) => {
-      const pathName = Path.resolve(embeddedSourceDir, entry.name);
-
-      ctx.addWatchFile(pathName);
-
-      const content = await Fs.readFile(pathName, 'utf8');
-      return {
-        fileName: entry.name,
-        content,
-      };
-    });
-
-  return Promise.all(embeddedFilesPromises);
-}
-
 /** @type {Rollup.RollupOptions[]} */
 const configs = [];
 
@@ -115,12 +48,6 @@ const baseConfig = {
   input: './src/index.ts',
   external: createIsExternal(Package),
   plugins: [
-    {
-      name: 'stubs',
-      async buildStart() {
-        await generateStubs(this);
-      },
-    },
     RollupPluginJson(),
     RollupPluginNodeResolve({
       mainFields: ['module', 'main'],
@@ -134,7 +61,7 @@ const baseConfig = {
     RollupPluginTs({
       browserslist: ['node 12.16'],
       exclude: ['node_modules'],
-      transpiler: 'babel',
+      transpiler: 'typescript',
     }),
   ],
 };
@@ -172,12 +99,6 @@ configs.push({
   },
   external: (spec) => /^[^/.]/.test(spec),
   plugins: [
-    {
-      name: 'stubs',
-      async buildStart() {
-        await generateStubs(this);
-      },
-    },
     RollupPluginJson(),
     RollupPluginNodeResolve({
       mainFields: ['module', 'main'],
@@ -190,7 +111,7 @@ configs.push({
     }),
     RollupPluginTs({
       exclude: ['node_modules'],
-      transpiler: 'babel',
+      transpiler: 'typescript',
     }),
   ],
 });
