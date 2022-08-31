@@ -132,16 +132,16 @@ export async function generateCodecCode(
 
       if (!omitField) {
         // Always emit if we don't have a special field configured;
-        return true;
+        return false;
       }
 
       if (typeof node.schema !== 'object' && node.schema != null) {
         // Always emit for boolean (and other?) schemas since we can't
         // have user-defined properties of non-object and null schemas.
-        return true;
+        return false;
       }
 
-      return !node.schema[omitField];
+      return !!node.schema[omitField];
     }
   });
 

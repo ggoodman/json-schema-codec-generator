@@ -307,7 +307,8 @@ export namespace Types {
    * A user is a known visitor.
    */
   export type User = {
-      [property: string]: JSONValue;
+      id: string;
+      name: string;
   };
   /**
    * A Blog Post
@@ -315,7 +316,10 @@ export namespace Types {
    * A blog post represents an article associated with an author
    */
   export type BlogPost = {
-      [property: string]: JSONValue;
+      id: string;
+      title: string;
+      content: string;
+      author?: User;
   };
   
 }
@@ -731,7 +735,9 @@ export namespace Types {
   };
   /** A Bookmark */
   export type Bookmark = {
-      [property: string]: JSONValue;
+      url: string;
+      name: string;
+      added_at: string;
   };
   
 }
