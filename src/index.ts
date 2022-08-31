@@ -28,6 +28,12 @@ export interface GenerateCodecCodeOptions {
   externalizeValidatorLibrary?: boolean;
   validateFormats?: boolean;
   moduleFormat?: Esbuild.Format;
+
+  /**
+   * Schema field that, when truthy, will result in the sub-schema being omitted
+   * in the generated types.
+   */
+  omitEmitField?: `x-${string}`;
 }
 
 export interface GenerateResult {
@@ -121,6 +127,22 @@ export async function generateCodecCode(
     // Skip emitting reference comments
     omitIdComments: true,
 
+    shouldOmitTypeEmit(node) {
+      const omitField = options?.omitEmitField;
+
+      if (!omitField) {
+        // Always emit if we don't have a special field configured;
+        return true;
+      }
+
+      if (typeof node.schema !== 'object' && node.schema != null) {
+        // Always emit for boolean (and other?) schemas since we can't
+        // have user-defined properties of non-object and null schemas.
+        return true;
+      }
+
+      return !node.schema[omitField];
+    }
   });
 
   if (diagnostics.length) {
