@@ -305,23 +305,17 @@ export namespace Types {
    * A User Object
    *
    * A user is a known visitor.
-   * @see file:///User.json
    */
   export type User = {
-      id: string;
-      name: string;
+      [property: string]: JSONValue;
   };
   /**
    * A Blog Post
    *
    * A blog post represents an article associated with an author
-   * @see file:///BlogPost.json
    */
   export type BlogPost = {
-      id: string;
-      title: string;
-      content: string;
-      author?: User;
+      [property: string]: JSONValue;
   };
   
 }
@@ -735,14 +729,9 @@ export namespace Types {
   type JSONValue = JSONPrimitive | JSONValue[] | {
       [key: string]: JSONValue;
   };
-  /**
-   * A Bookmark
-   * @see file:///Bookmark.json
-   */
+  /** A Bookmark */
   export type Bookmark = {
-      url: string;
-      name: string;
-      added_at: string;
+      [property: string]: JSONValue;
   };
   
 }
