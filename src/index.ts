@@ -118,6 +118,9 @@ export async function generateCodecCode(
       isExported: true,
     },
     anyType: options.anyType ?? 'JSONValue',
+    // Skip emitting reference comments
+    omitIdComments: true,
+
   });
 
   if (diagnostics.length) {
