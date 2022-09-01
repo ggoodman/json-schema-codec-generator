@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- When an `omitEmitField` option is specified, add that field's name as an accepted keyword to the underlying ajv instance. This will prevent ajv's strict mode from complaining about an unexpected keyword in the schema.
 
 ## [0.7.1] - 2022-08-31
 ### Fixed

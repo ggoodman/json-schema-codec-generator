@@ -56,6 +56,56 @@ describe('Codec generation', () => {
     expect(typeDefinitions).toMatchSnapshot();
   });
 
+  it('will support extensibility fields', async () => {
+    const { javaScript, schamaPathsToCodecNames, typeDefinitions } = await generateCodecCode(
+      [
+        {
+          schema: {
+            title: 'A User Object',
+            description: 'A user is a known visitor.',
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+              },
+              name: {
+                type: 'string',
+              },
+            },
+            required: ['id', 'name'],
+          },
+          uri: 'file:///User.json',
+          preferredName: 'User',
+        },
+        {
+          schema: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+              },
+              hidden: {
+                description: 'A hidden property',
+                type: 'string',
+                'x-omit-types': true,
+              },
+            },
+            required: ['id', 'hidden'],
+          },
+          uri: 'file:///Thing.json',
+          preferredName: 'Thing',
+        },
+      ],
+      {
+        omitEmitField: 'x-omit-types',
+      }
+    );
+
+    expect(javaScript).toMatchSnapshot();
+    expect(schamaPathsToCodecNames).toMatchSnapshot();
+    expect(typeDefinitions).toMatchSnapshot();
+  });
+
   it('will validate a well-known format from ajv-formats', async () => {
     const { javaScript, schamaPathsToCodecNames, typeDefinitions } = await generateCodecCode(
       [

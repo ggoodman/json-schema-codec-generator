@@ -331,6 +331,286 @@ export declare const Codecs: {
   "
 `;
 
+exports[`Codec generation will support extensibility fields 1`] = `
+"var __defProp = Object.defineProperty;
+var __markAsModule = (target) => __defProp(target, \\"__esModule\\", {value: true});
+var __export = (target, all) => {
+  for (var name in all)
+    __defProp(target, name, {get: all[name], enumerable: true});
+};
+
+// src/src/index.ts
+__markAsModule(exports);
+__export(exports, {
+  Codecs: () => Codecs,
+  ValidationError: () => ValidationError,
+  createCodec: () => createCodec
+});
+
+// node_modules/@ggoodman/typed-validator/typed-validator.js
+var ValidationError = class extends Error {
+  static isValidationError(err) {
+    return err instanceof this;
+  }
+  constructor(schemaName, value, validatorErrors) {
+    const errorStrings = validatorErrors.map((err) => {
+      return \`  \${err.message} at \${err.instancePath || \\"#\\"}, got \${valueToShapeString(err.data)}\`;
+    });
+    super(\`Validation for the schema \${JSON.stringify(schemaName)} failed with the following errors:
+\${errorStrings.join(\\"\\\\n\\")}\`);
+    this.value = value;
+    this.validatorErrors = validatorErrors;
+  }
+};
+function valueToShapeString(value) {
+  return JSON.stringify(value, valueToShapeReplacer);
+}
+function valueToShapeReplacer(_key, value) {
+  return typeof value === \\"object\\" && value ? value : typeof value;
+}
+var CodecImpl = class CodecImpl2 {
+  identity(obj) {
+    return obj;
+  }
+  is(obj) {
+    return this.validateFn(obj);
+  }
+  validate(obj) {
+    if (!this.validateFn(obj)) {
+      throw new ValidationError(this.name, obj, this.validateFn.errors || []);
+    }
+    return obj;
+  }
+  constructor(name, uri, validateFn) {
+    this.name = name;
+    this.uri = uri;
+    this.validateFn = validateFn;
+  }
+};
+function createCodec(name, uri, validateFn) {
+  return new CodecImpl(name, uri, validateFn);
+}
+
+// src/src/index.ts
+exports.__validate_User = validate21;
+var schema6 = {\\"$id\\": \\"file:///User.json\\", \\"title\\": \\"A User Object\\", \\"description\\": \\"A user is a known visitor.\\", \\"type\\": \\"object\\", \\"properties\\": {\\"id\\": {\\"type\\": \\"string\\"}, \\"name\\": {\\"type\\": \\"string\\"}}, \\"required\\": [\\"id\\", \\"name\\"]};
+function validate21(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
+  ;
+  let vErrors = null;
+  let errors = 0;
+  const _errs0 = errors;
+  if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
+    if (data.id === void 0) {
+      const err0 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"id\\"}, message: \\"must have required property 'id'\\", schema: schema6.required, parentSchema: schema6, data};
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    if (data.name === void 0) {
+      const err1 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"name\\"}, message: \\"must have required property 'name'\\", schema: schema6.required, parentSchema: schema6, data};
+      if (vErrors === null) {
+        vErrors = [err1];
+      } else {
+        vErrors.push(err1);
+      }
+      errors++;
+    }
+    if (data.id !== void 0) {
+      let data0 = data.id;
+      const _errs1 = errors;
+      if (typeof data0 !== \\"string\\") {
+        const err2 = {instancePath: instancePath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.id.type, parentSchema: schema6.properties.id, data: data0};
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+      const _errs2 = errors;
+      var valid0 = _errs1 === errors;
+    }
+    if (data.name !== void 0) {
+      let data1 = data.name;
+      const _errs3 = errors;
+      if (typeof data1 !== \\"string\\") {
+        const err3 = {instancePath: instancePath + \\"/name\\", schemaPath: \\"#/properties/name/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema6.properties.name.type, parentSchema: schema6.properties.name, data: data1};
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+      const _errs4 = errors;
+      var valid0 = _errs3 === errors;
+    }
+  } else {
+    const err4 = {instancePath, schemaPath: \\"#/type\\", keyword: \\"type\\", params: {type: \\"object\\"}, message: \\"must be object\\", schema: schema6.type, parentSchema: schema6, data};
+    if (vErrors === null) {
+      vErrors = [err4];
+    } else {
+      vErrors.push(err4);
+    }
+    errors++;
+  }
+  validate21.errors = vErrors;
+  return errors === 0;
+}
+exports.__validate_Thing = validate22;
+var schema7 = {\\"$id\\": \\"file:///Thing.json\\", \\"type\\": \\"object\\", \\"properties\\": {\\"id\\": {\\"type\\": \\"string\\"}, \\"hidden\\": {\\"description\\": \\"A hidden property\\", \\"type\\": \\"string\\", \\"x-omit-types\\": true}}, \\"required\\": [\\"id\\", \\"hidden\\"]};
+function validate22(data, {instancePath = \\"\\", parentData, parentDataProperty, rootData = data} = {}) {
+  ;
+  let vErrors = null;
+  let errors = 0;
+  const _errs0 = errors;
+  if (data && typeof data == \\"object\\" && !Array.isArray(data)) {
+    if (data.id === void 0) {
+      const err0 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"id\\"}, message: \\"must have required property 'id'\\", schema: schema7.required, parentSchema: schema7, data};
+      if (vErrors === null) {
+        vErrors = [err0];
+      } else {
+        vErrors.push(err0);
+      }
+      errors++;
+    }
+    if (data.hidden === void 0) {
+      const err1 = {instancePath, schemaPath: \\"#/required\\", keyword: \\"required\\", params: {missingProperty: \\"hidden\\"}, message: \\"must have required property 'hidden'\\", schema: schema7.required, parentSchema: schema7, data};
+      if (vErrors === null) {
+        vErrors = [err1];
+      } else {
+        vErrors.push(err1);
+      }
+      errors++;
+    }
+    if (data.id !== void 0) {
+      let data0 = data.id;
+      const _errs1 = errors;
+      if (typeof data0 !== \\"string\\") {
+        const err2 = {instancePath: instancePath + \\"/id\\", schemaPath: \\"#/properties/id/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema7.properties.id.type, parentSchema: schema7.properties.id, data: data0};
+        if (vErrors === null) {
+          vErrors = [err2];
+        } else {
+          vErrors.push(err2);
+        }
+        errors++;
+      }
+      const _errs2 = errors;
+      var valid0 = _errs1 === errors;
+    }
+    if (data.hidden !== void 0) {
+      let data1 = data.hidden;
+      const _errs3 = errors;
+      if (typeof data1 !== \\"string\\") {
+        const err3 = {instancePath: instancePath + \\"/hidden\\", schemaPath: \\"#/properties/hidden/type\\", keyword: \\"type\\", params: {type: \\"string\\"}, message: \\"must be string\\", schema: schema7.properties.hidden.type, parentSchema: schema7.properties.hidden, data: data1};
+        if (vErrors === null) {
+          vErrors = [err3];
+        } else {
+          vErrors.push(err3);
+        }
+        errors++;
+      }
+      const _errs4 = errors;
+      var valid0 = _errs3 === errors;
+    }
+  } else {
+    const err4 = {instancePath, schemaPath: \\"#/type\\", keyword: \\"type\\", params: {type: \\"object\\"}, message: \\"must be object\\", schema: schema7.type, parentSchema: schema7, data};
+    if (vErrors === null) {
+      vErrors = [err4];
+    } else {
+      vErrors.push(err4);
+    }
+    errors++;
+  }
+  validate22.errors = vErrors;
+  return errors === 0;
+}
+var Codecs = {
+  User: createCodec(\\"User\\", \\"file:///User.json\\", exports.__validate_User),
+  Thing: createCodec(\\"Thing\\", \\"file:///Thing.json\\", exports.__validate_Thing)
+};
+"
+`;
+
+exports[`Codec generation will support extensibility fields 2`] = `
+Object {
+  "file:///Thing.json": "Thing",
+  "file:///User.json": "User",
+}
+`;
+
+exports[`Codec generation will support extensibility fields 3`] = `
+"
+interface ErrorObject {
+    instancePath: string;
+    message?: string;
+    data?: unknown;
+}
+declare class ValidationError extends Error {
+    static isValidationError(err: unknown): err is ValidationError;
+    readonly validatorErrors: ErrorObject[];
+    readonly value: unknown;
+    constructor(schemaName: string, value: unknown, validatorErrors: ErrorObject[]);
+}
+
+interface Codec<T> {
+    /**
+     * Identify function returning the given argument as a value matching the schema.
+     *
+     * This can be useful to use in non-TypeScript code to construct a valid object while
+     * benefitting from suggestions from a TypeScript language service.
+     */
+    identity(obj: T): T;
+    /**
+     * Check if a value matches the schema.
+     */
+    is(obj: unknown): obj is T;
+    /**
+     * Validate that a value matches the schema and throws if not.
+     */
+    validate(obj: unknown): T;
+}
+interface ValidateFunction<T = unknown> {
+    (data: unknown): data is T;
+    errors?: ErrorObject[];
+}
+
+declare function createCodec<T>(name: string, uri: string, validateFn: ValidateFunction<T>): Codec<T>;
+
+export { Codec, ErrorObject, ValidateFunction, ValidationError, createCodec };
+//# sourceMappingURL=typed-validator.d.ts.map
+;
+
+export namespace Types {
+  type JSONPrimitive = boolean | null | number | string;
+  type JSONValue = JSONPrimitive | JSONValue[] | {
+      [key: string]: JSONValue;
+  };
+  /**
+   * A User Object
+   *
+   * A user is a known visitor.
+   */
+  export type User = {
+      id: string;
+      name: string;
+  };
+  export type Thing = {
+      id: string;
+  };
+  
+}
+
+export declare const Codecs: {
+  User: Codec<Types.User>,
+  Thing: Codec<Types.Thing>
+};
+  "
+`;
+
 exports[`Codec generation will validate a well-known format from ajv-formats 1`] = `
 "var __defProp = Object.defineProperty;
 var __defProps = Object.defineProperties;
