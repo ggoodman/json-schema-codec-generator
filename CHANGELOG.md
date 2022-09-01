@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [0.7.2] - 2022-09-01
 ### Fixed
 - When an `omitEmitField` option is specified, add that field's name as an accepted keyword to the underlying ajv instance. This will prevent ajv's strict mode from complaining about an unexpected keyword in the schema.
 
@@ -113,7 +115,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 [#1]: https://github.com/ggoodman/json-schema-codec-generator/issues/1
 
-[Unreleased]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.7.1...HEAD
+[Unreleased]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.7.2...HEAD
+[0.7.2]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.7.1...v0.7.2
 [0.7.1]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.7.0...v0.7.1
 [0.7.0]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.7.0-0...v0.7.0
 [0.7.0-0]: https://github.com/ggoodman/json-schema-codec-generator/compare/v0.6.1...v0.7.0-0
