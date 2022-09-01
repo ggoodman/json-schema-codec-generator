@@ -83,6 +83,14 @@ export async function generateCodecCode(
     addFormats(ajv, options.ajvFormatsOptions);
   }
 
+  if (options.omitEmitField) {
+    ajv.addKeyword({
+      keyword: options.omitEmitField,
+      schemaType: 'boolean',
+      errors: false,
+    })
+  }
+
   const moduleFormat = options.moduleFormat || 'cjs';
   const exportedNameToSchema: Record<string, JSONSchema> = {};
   const uriToExportedName: Record<string, string> = {};
