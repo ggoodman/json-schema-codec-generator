@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Changed
+- Update AJV version to support referenced `discriminator` entries in `oneOf` types (see ajv-validator/ajv#1815).
 
 ## [0.7.2] - 2022-09-01
 ### Fixed
