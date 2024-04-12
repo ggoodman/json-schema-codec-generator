@@ -60,14 +60,10 @@
     "ts-jest": "^27.1.4"
   },
   "scripts": {
-    "build": "rm -rf dist && rollup -c rollup.config.js",
+    "build": "rm -rf dist && rollup -c rollup.config.mjs",
     "lint": "prettier --check src/**/*",
     "prepack": "npm run build",
-    "test": "jest --verbose",
-    "posttest": "kacl lint",
-    "preversion": "kacl prerelease",
-    "version": "kacl release && git add CHANGELOG.md",
-    "postversion": "git push && gh-release"
+    "test": "jest --verbose"
   },
   "repository": {
     "type": "git",
