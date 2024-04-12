@@ -21,16 +21,6 @@
     "json-schema-codec-generator": "bin/json-schema-codec-generator"
   },
   "browser": {},
-  "exports": {
-    ".": {
-      "node": {
-        "require": "./dist/index.js",
-        "import": "./dist/index.esm.js"
-      },
-      "default": "./dist/index.js"
-    },
-    "./dist/": "./dist/"
-  },
   "files": [
     "dist/**/!(tsconfig.tsbuildinfo)"
   ],
@@ -81,5 +71,10 @@
   "volta": {
     "node": "18.20.2",
     "npm": "10.5.2"
+  },
+  "release": {
+    "branches": [
+      "main"
+    ]
   }
 }
