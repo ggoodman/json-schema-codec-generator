@@ -1,6 +1,6 @@
 /// <reference types="jest" />
 
-import type { Codec, ErrorObject } from '@ggoodman/typed-validator';
+import { ValidateFunction } from 'ajv';
 import Module from 'module';
 import { generateCodecCode } from '../src';
 
@@ -98,7 +98,7 @@ describe('Codec generation', () => {
       ],
       {
         omitEmitField: 'x-omit-types',
-      }
+      },
     );
 
     expect(javaScript).toMatchSnapshot();
@@ -140,7 +140,7 @@ describe('Codec generation', () => {
       {
         moduleFormat: 'cjs',
         validateFormats: true,
-      }
+      },
     );
 
     expect(javaScript).toMatchSnapshot();
@@ -152,90 +152,37 @@ describe('Codec generation', () => {
 
     instantiate(mod, mod.exports, require);
 
-    expect(mod.exports.Codecs).toHaveProperty('Bookmark');
+    expect(mod.exports).toHaveProperty('validateBookmark');
 
-    const Bookmark: Codec<any> = mod.exports.Codecs.Bookmark;
+    const validateBookmark: ValidateFunction<any> = mod.exports.validateBookmark;
     const now = new Date();
 
-    const want = {
-      url: 'https://github.com/ggoodman',
-      name: 'Geoff Goodman on GitHub',
-      added_at: now.toISOString(),
-    };
-    const got = Bookmark.validate({
-      url: 'https://github.com/ggoodman',
-      name: 'Geoff Goodman on GitHub',
-      added_at: now.toISOString(),
-    });
-
-    expect(want).toEqual(got);
-
     expect(
-      Bookmark.is({
+      validateBookmark({
         url: 'https://github.com/ggoodman',
         name: 'Geoff Goodman on GitHub',
         added_at: now.toISOString(),
-      })
+      }),
     ).toEqual(true);
 
-    await expect(() =>
-      Bookmark.validate({
+    expect(
+      validateBookmark({
+        // Invalid URL here; missing scheme
         url: 'github.com/ggoodman',
         name: 'Geoff Goodman on GitHub',
         added_at: now.toISOString(),
-      })
-    ).toThrowErrorMatchingInlineSnapshot(`
-            "Validation for the schema \\"Bookmark\\" failed with the following errors:
-              must match format \\"uri\\" at /url, got \\"string\\""
-          `);
-  });
+      }),
+    ).toEqual(false);
 
-  it('will export ValidationError', async () => {
-    const { javaScript, schamaPathsToCodecNames, typeDefinitions } = await generateCodecCode(
-      [
-        {
-          schema: {
-            title: 'A Bookmark',
-            type: 'object',
-          },
-          uri: 'file:///Bookmark.json',
-          preferredName: 'Bookmark',
-        },
-      ],
-      {
-        moduleFormat: 'cjs',
-        validateFormats: true,
-      }
+    expect(validateBookmark.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          schemaPath: '#/properties/url/format',
+          keyword: 'format',
+          data: 'github.com/ggoodman',
+          instancePath: '/url',
+        }),
+      ]),
     );
-
-    const mod = new Module('schema', module);
-    const instantiate = new Function('module', 'exports', 'require', javaScript);
-
-    instantiate(mod, mod.exports, require);
-
-    {
-      const want = 'function';
-      const got = typeof mod.exports.ValidationError;
-
-      expect(got).toEqual(want);
-    }
-    {
-      const want = 'function';
-      const got = typeof mod.exports.ValidationError.isValidationError;
-
-      expect(got).toEqual(want);
-    }
-
-    {
-      const err = new mod.exports.ValidationError('foo', {}, []);
-      const want = true;
-      const got = mod.exports.ValidationError.isValidationError(err);
-
-      expect(got).toEqual(want);
-    }
-  });
-
-  it('exports a ErrorObject type that is compatible with the ajv equivalent', () => {
-    ((_t: ErrorObject) => {})({} as import('ajv').ErrorObject);
   });
 });

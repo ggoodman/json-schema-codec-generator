@@ -1,5 +1,23 @@
 {
-  "extends": "./tsconfig.base.json",
-  // When you clone the starter template, here is where you can
-  "compilerOptions": {}
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "alwaysStrict": true,
+    "declaration": true,
+    "declarationMap": true,
+    "diagnostics": true,
+    "downlevelIteration": true,
+    "esModuleInterop": true,
+    "incremental": true,
+    "module": "esnext",
+    "moduleResolution": "node",
+    "outDir": "./dist",
+    "pretty": true,
+    "resolveJsonModule": true,
+    "sourceMap": true,
+    "strict": true,
+    "isolatedModules": true,
+    "target": "ES2022",
+    "types": ["node"]
+  },
+  "include": ["src", "test"]
 }
