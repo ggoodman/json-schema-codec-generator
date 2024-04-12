@@ -78,7 +78,7 @@
   },
   "homepage": "https://github.com/ggoodman/json-schema-codec-generator#readme",
   "engines": {
-    "node": ">=10.16.0"
+    "node": ">=18.12.0"
   },
   "prettier": {
     "arrowParens": "always",

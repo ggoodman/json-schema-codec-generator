@@ -8,7 +8,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [macOS-latest, ubuntu-latest]
-        node-version: [14, 16, 18]
+        node-version: [18, 20]
     steps:
       - uses: actions/checkout@v3
       - uses: volta-cli/action@v1
