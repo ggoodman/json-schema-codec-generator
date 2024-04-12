@@ -9,7 +9,7 @@ import { builtinModules } from 'module';
 import * as Path from 'path';
 import * as Rollup from 'rollup';
 import RollupPluginTs from 'rollup-plugin-ts';
-import * as Package from './package.json';
+import * as Package from './package.json' with { type: 'json' };
 
 const SPEC_RX = /^(@[^/]+\/[^/@]+|[^./@][^/@]*)(.*)?$/;
 

@@ -2,9 +2,7 @@ import Ajv, { type Options } from 'ajv';
 import addFormats, { type FormatOptions } from 'ajv-formats';
 import standaloneCode from 'ajv/dist/standalone';
 import * as Esbuild from 'esbuild-wasm';
-import { readFile } from 'fs/promises';
-import { type JSONSchema, Parser } from 'json-schema-to-dts';
-import { dirname, join, resolve } from 'path';
+import { Parser, type JSONSchema } from 'json-schema-to-dts';
 
 export interface SchemaEntry {
   uri: string;
@@ -62,9 +60,11 @@ export interface GenerateResult {
 
 export async function generateCodecCode(
   schemas: SchemaEntry[],
-  options: GenerateCodecCodeOptions = {}
+  options: GenerateCodecCodeOptions = {},
 ): Promise<GenerateResult> {
-  const parser = new Parser();
+  const parser = new Parser({
+    defaultUnknownPropertiesSchema: true,
+  });
   const ajv = new Ajv({
     verbose: true,
     validateFormats: options.validateFormats,
@@ -73,8 +73,9 @@ export async function generateCodecCode(
     code: {
       es5: false, // use es6
       lines: true,
-      optimize: false, // we'll let rollup do this
+      optimize: true, // we'll let rollup do this
       source: true,
+      esm: true,
     },
     inlineRefs: false,
   });
@@ -88,42 +89,59 @@ export async function generateCodecCode(
       keyword: options.omitEmitField,
       schemaType: 'boolean',
       errors: false,
-    })
+    });
   }
+
+  // We want to produce a pair of files; the first is the JavaScript code for
+  // the validator functions for each schema, and the second is the TypeScript
+  // type definitions for the exported API.
+  //
+  // Given a schema named 'Schema', we want the following exports:
+  // ```ts
+  // export type Schema = { /* ... */ };
+  // export function createSchema(obj: Schema): Schema;
+  // export function isSchema(value: unknown): value is Schema;
+  // export function validateSchema(value: unknown): Schema;
+  // ```
 
   const moduleFormat = options.moduleFormat || 'cjs';
   const exportedNameToSchema: Record<string, JSONSchema> = {};
   const uriToExportedName: Record<string, string> = {};
+  const exportedNameToURI: Record<string, string> = {};
   /**
    * A collection of exported names used to add safety to some risky
    * regex-based code rewriting of `exports.<symbol> = ` to `export const <symbol> = `.
    */
   const exportedNames = new Set<string>();
-  const codecDefinitions: string[] = [];
-  const codecInstances: string[] = [];
+
+  const schemaEntries: Map<
+    string,
+    { uri: string; preferredName: string; jsLines: string[]; tsdLines: string[] }
+  > = new Map();
 
   for (const { schema, uri, preferredName } of schemas) {
+    const name = parser.addSchema(uri, schema, { preferredName });
     const schemaWithId: JSONSchema = { $id: uri, ...schema };
-    const name = parser.addSchema(uri, schemaWithId, { preferredName });
 
     if (exportedNames.has(name)) {
       throw new Error(
-        `Invariant violation: The name ${JSON.stringify(name)} was expored more than once`
+        `Invariant violation: The name ${JSON.stringify(name)} was expored more than once`,
       );
     }
 
     exportedNames.add(name);
     uriToExportedName[uri] = name;
+    exportedNameToURI[name] = schemaWithId.$id!;
     exportedNameToSchema[name] = schemaWithId;
 
-    ajv.addSchema(schemaWithId, validatorNameForCodec(name));
+    ajv.addSchema(schemaWithId, name);
 
-    codecDefinitions.push(`${name}: Codec<Types.${name}>`);
-    codecInstances.push(
-      `${name}: createCodec<Types.${name}>(${JSON.stringify(name)}, ${JSON.stringify(
-        uri
-      )}, exports.${validatorNameForCodec(name)}) as Codec<Types.${name}>`
-    );
+    const jsLines: string[] = [
+      `export { ${name} as validate${name} } from '/virtual/validators.js';`,
+    ];
+    const tsdLines: string[] = [`export const validate${name}: ValidatorFunction<${name}>;`];
+
+    schemaEntries.set(name, { uri, preferredName: name, jsLines, tsdLines });
   }
 
   const { diagnostics, text: schemaTypeDefs } = parser.compile({
@@ -150,66 +168,92 @@ export async function generateCodecCode(
       }
 
       return !!node.schema[omitField];
-    }
+    },
   });
 
   if (diagnostics.length) {
     throw new Error(
       `Produced diagnostics while generating type definitions for schemas: ${diagnostics
         .map((diagnostic) => `${diagnostic.message}`)
-        .join('\n')}`
+        .join('\n')}`,
     );
   }
 
-  const standaloneValidationCode = standaloneCode(ajv);
+  const standaloneValidationCode = standaloneCode(ajv, exportedNameToURI);
+
+  const virtualFiles: Map<string, string> = new Map();
+
+  virtualFiles.set('/virtual/validators.js', standaloneValidationCode);
+  virtualFiles.set(
+    '/virtual/index.js',
+    [...schemaEntries].flatMap(([, { jsLines }]) => jsLines).join('\n'),
+  );
+
   const bundleResult = await Esbuild.build({
     bundle: true,
     define: {
       'process.env.NODE_ENV': JSON.stringify('production'),
     },
-    external: options.externalizeValidatorLibrary === true ? ['@ggoodman/typed-validator'] : [],
     format: moduleFormat,
+    entryPoints: ['/virtual/index.js'],
     outfile: 'codecs.js',
     platform: 'neutral',
-    stdin: {
-      contents: `
-import { createCodec } from '@ggoodman/typed-validator';
+    plugins: [
+      {
+        name: 'virtual-files',
+        setup(build) {
+          build.onResolve({ filter: /^\/virtual\/.*/ }, async (args) => {
+            if (virtualFiles.has(args.path)) {
+              return {
+                path: args.path,
+                namespace: 'virtual-file',
+              };
+            }
+          });
+          build.onLoad({ filter: /.*/, namespace: 'virtual-file' }, async (args) => {
+            const contents = virtualFiles.get(args.path);
 
-export * from '@ggoodman/typed-validator';
+            if (contents == null) {
+              throw new Error(`Invariant violation: No contents for ${args.path}`);
+            }
 
-${standaloneValidationCode}
-
-export const Codecs = {
-  ${codecInstances.join(',\n')}
-} as const;
-
-      `,
-      loader: 'ts',
-      sourcefile: 'src/index.ts',
-      resolveDir: __dirname,
-    },
-    target: 'node10',
+            return {
+              contents,
+              loader: 'js',
+              resolveDir: __dirname,
+            };
+          });
+        },
+      },
+    ],
+    target: 'node16',
     treeShaking: true,
     write: false,
   });
 
   if (bundleResult.outputFiles.length !== 1) {
     throw new Error(
-      `Invariant violation: Produced ${bundleResult.outputFiles.length}, expecting exactly 1`
+      `Invariant violation: Produced ${bundleResult.outputFiles.length}, expecting exactly 1`,
     );
   }
 
   const javaScript = bundleResult.outputFiles[0].text;
+
   const typeDefinitions = `
-${await readTypes('@ggoodman/typed-validator')};
+    export interface ErrorObject {
+      instancePath: string;
+      message?: string;
+      data?: unknown;
+    }
 
-export namespace Types {
-  ${schemaTypeDefs.split('\n').join('\n  ')}
-}
+    export interface ValidatorFunction<T> {
+      (obj: unknown): obj is T;
+      errors?: ErrorObject[];
+    }
 
-export declare const Codecs: {
-  ${codecDefinitions.join(',\n  ')}
-};
+    ${schemaTypeDefs}
+
+    ${[...schemaEntries].flatMap(([, { tsdLines }]) => tsdLines).join('\n')}
   `;
 
   return {
@@ -217,16 +261,4 @@ export declare const Codecs: {
     typeDefinitions,
     schamaPathsToCodecNames: uriToExportedName,
   };
-}
-
-function validatorNameForCodec(codecName: string) {
-  return `__validate_${codecName}`;
-}
-
-function readTypes(moduleName: string) {
-  const packageJsonPath = require.resolve(join(moduleName, 'package.json'));
-  const packageJson = require(packageJsonPath);
-  const typesPath = resolve(dirname(packageJsonPath), packageJson['types']);
-
-  return readFile(typesPath, { encoding: 'utf-8' });
 }
