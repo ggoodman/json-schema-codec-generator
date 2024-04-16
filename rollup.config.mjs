@@ -9,7 +9,7 @@ import { builtinModules } from 'module';
 import * as Path from 'path';
 import * as Rollup from 'rollup';
 import RollupPluginTs from 'rollup-plugin-ts';
-import * as Package from './package.json' with { type: 'json' };
+import { default as Package } from './package.json' with { type: 'json' };
 
 const SPEC_RX = /^(@[^/]+\/[^/@]+|[^./@][^/@]*)(.*)?$/;
 
@@ -59,7 +59,7 @@ const baseConfig = {
       ],
     }),
     RollupPluginTs({
-      browserslist: ['node 12.16'],
+      // browserslist: ['node 18.12'],
       exclude: ['node_modules'],
       transpiler: 'typescript',
     }),
@@ -104,10 +104,10 @@ configs.push({
       mainFields: ['module', 'main'],
     }),
     RollupPluginCommonjs({
-      dynamicRequireTargets: [
-        // include using a glob pattern (either a string or an array of strings)
-        'node_modules/ajv/dist/compile**/*.js',
-      ],
+      // dynamicRequireTargets: [
+      //   // include using a glob pattern (either a string or an array of strings)
+      //   'node_modules/ajv/dist/compile**/*.js',
+      // ],
     }),
     RollupPluginTs({
       exclude: ['node_modules'],
